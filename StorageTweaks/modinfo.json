@@ -1,0 +1,15 @@
+{
+  "$schema": "https://moddbcdn.vintagestory.at/schema/modinfo.latest.json",
+  "type": "Code",
+  "modid": "storagetweaks",
+  "name": "Storage Tweaks",
+  "authors": [
+    "Trojan96"
+  ],
+  "description": "Adds compact/sort and quick-unload buttons to chests.",
+  "side": "Universal",
+  "version": "1.0.5",
+  "dependencies": {
+    "game": "1.22.0-rc.5"
+  }
+}
