@@ -88,11 +88,10 @@ public class SvgButton(
         }
     }
 
-    public override void OnMouseDown(ICoreClientAPI capi, MouseEvent mouse)
+    public override void OnMouseDownOnElement(ICoreClientAPI capi, MouseEvent args)
     {
-        base.OnMouseDown(capi, mouse);
-        if (!Bounds.PointInside(mouse.X, mouse.Y) || !onClick()) return;
-        mouse.Handled = true;
+        base.OnMouseDownOnElement(capi, args);
+        if (!onClick()) return;
         capi.Gui.PlaySound("tick");
     }
 
