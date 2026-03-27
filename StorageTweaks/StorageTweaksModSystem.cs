@@ -218,56 +218,48 @@ public class StorageTweaksModSystem : ModSystem
             slots = inventory.ToList();
         }
 
-        var itemStacks = slots.Where(s => !s.Empty).Select(s =>
+        // Compact stacks
+        for (var i = 0; i < slots.Count; i++)
         {
-            Debug.Assert(s.Itemstack != null);
-            return s.Itemstack.Clone();
+            var sourceSlot = slots[i];
+            if (sourceSlot.Empty) continue;
+
+            var stack = sourceSlot.Itemstack;
+
+            // Try to merge this stack into every other suitable slot
+            for (var j = 0; j < slots.Count; j++)
+            {
+                if (i == j) continue; // Don't merge into itself
+
+                var targetSlot = slots[j];
+                if (targetSlot.Empty) continue;
+
+                sourceSlot.TryPutInto(world, targetSlot, stack.StackSize);
+                if (sourceSlot.Empty) break;
+            }
+        }
+
+        var itemStacks = slots.Where(s => !s.Empty).Select(x =>
+        {
+            Debug.Assert(x.Itemstack != null);
+            return x.Itemstack.Clone();
         }).ToList();
 
-        // Compact stacks
-        var groupedStacks = new List<List<ItemStack>>();
-        foreach (var stack in itemStacks)
-        {
-            if (stack.Collectible == null) continue;
-            var i = groupedStacks.FindIndex(list => stack.Equals(world, list.First()));
-            if (i != -1)
-            {
-                groupedStacks[i].Add(stack);
-                continue;
-            }
-
-            groupedStacks.Add([stack]);
-        }
-
-        var compactedStacks = new List<ItemStack>();
-
-        foreach (var group in groupedStacks)
-        {
-            var maxStackSize = group.First().Collectible.MaxStackSize;
-            var totalQuantity = group.Sum(stack => stack.StackSize);
-            var firstStack = group.First();
-
-            while (totalQuantity > 0)
-            {
-                var stackSize = Math.Min(totalQuantity, maxStackSize);
-                var newStack = firstStack.Clone();
-                newStack.StackSize = stackSize;
-                compactedStacks.Add(newStack);
-                totalQuantity -= stackSize;
-            }
-        }
-
-        itemStacks = compactedStacks;
-
-
-        // Sort by Class, Code, and StackSize
+        // Sort by Class, Code, Contents and StackSize
         itemStacks.Sort((a, b) =>
         {
             var classComparison = string.Compare(a.Collectible.Class, b.Collectible.Class, StringComparison.Ordinal);
             if (classComparison != 0) return classComparison;
 
+
             var codeComparison = a.Collectible.Code.CompareTo(b.Collectible.Code);
-            return codeComparison != 0 ? codeComparison : b.StackSize.CompareTo(a.StackSize);
+            if (codeComparison != 0) return codeComparison;
+
+            var contentsA = a.Attributes.GetTreeAttribute("contents")?.ToJsonToken() ?? "";
+            var contentsB = b.Attributes.GetTreeAttribute("contents")?.ToJsonToken() ?? "";
+            var contentsComparison = string.Compare(contentsA, contentsB, StringComparison.Ordinal);
+
+            return contentsComparison != 0 ? contentsComparison : b.StackSize.CompareTo(a.StackSize);
         });
 
         // Clear and refill
