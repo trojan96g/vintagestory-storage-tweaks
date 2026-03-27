@@ -23,20 +23,20 @@ public class SvgButton(
 
         var iconSize = (int)Bounds.InnerWidth;
 
-        var shadowSurface = RenderShadow(iconSize);
+        var shadowSurface = DrawShadow(iconSize);
         api.Gui.LoadOrUpdateCairoTexture(shadowSurface, true, ref _shadowTexture);
         shadowSurface.Dispose();
 
-        var normalSurface = RenderNormalTexture(iconSize);
+        var normalSurface = DrawNormalTexture(iconSize);
         api.Gui.LoadOrUpdateCairoTexture(normalSurface, true, ref _normalTexture);
         normalSurface.Dispose();
 
-        var hoverSurface = RenderHoverTexture(iconSize);
+        var hoverSurface = DrawHoverTexture(iconSize);
         api.Gui.LoadOrUpdateCairoTexture(hoverSurface, true, ref _hoverTexture);
         hoverSurface.Dispose();
     }
 
-    private ImageSurface RenderShadow(int size)
+    private ImageSurface DrawShadow(int size)
     {
         var surface = new ImageSurface(Format.Argb32, size, size);
         var ctx = new Context(surface);
@@ -47,7 +47,7 @@ public class SvgButton(
         return surface;
     }
 
-    private ImageSurface RenderNormalTexture(int size)
+    private ImageSurface DrawNormalTexture(int size)
     {
         var surface = new ImageSurface(Format.Argb32, size, size);
         var ctx = new Context(surface);
@@ -58,7 +58,7 @@ public class SvgButton(
         return surface;
     }
 
-    private ImageSurface RenderHoverTexture(int size)
+    private ImageSurface DrawHoverTexture(int size)
     {
         var surface = new ImageSurface(Format.Argb32, size, size);
         var ctx = new Context(surface);
