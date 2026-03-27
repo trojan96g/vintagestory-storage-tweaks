@@ -1,0 +1,60 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: Build Storage Tweaks Mod
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Cache Vintage Story
+      uses: actions/cache@v5
+      id: cache-vs
+      with:
+        path: vintagestory
+        key: vintagestory-${{ vars.VS_DOWNLOAD_URL }}
+
+    - name: Download & extract Vintage Story
+      if: steps.cache-vs.outputs.cache-hit != 'true'
+      env:
+        VS_DOWNLOAD_URL: ${{ vars.VS_DOWNLOAD_URL }}
+      run: |
+        curl -o vs.tar.gz $VS_DOWNLOAD_URL
+        tar -xzf vs.tar.gz
+        test -d vintagestory
+
+    - name: Set VINTAGE_STORY env
+      run: echo "VINTAGE_STORY=$PWD/vintagestory" >> $GITHUB_ENV
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet run --project ./CakeBuild/CakeBuild.csproj
+
+    - name: Generate artifact name
+      run: |
+        name=$(basename Releases/storagetweaks_*.zip .zip)
+        echo "ARTIFACT_NAME=$name" >> $GITHUB_ENV
+
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v6
+      with:
+        name: ${{ env.ARTIFACT_NAME }}
+        compression-level: 9
+        path: Releases/storagetweaks/*
