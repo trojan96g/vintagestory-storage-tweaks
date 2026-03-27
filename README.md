@@ -2,6 +2,8 @@
 
 A small quality of life mod that makes managing storage and inventory a bit easier with basically two features
 
+![Image](https://github.com/user-attachments/assets/ab44f7b9-b5c0-4c03-a683-1172d62a5b5c)
+
 ## Sort & Compact
 The sort button combines stacks if possibe and sorts items in the chest by class and code. This functionality is also available in the player inventory but doesn't touch the hotbar.
 
