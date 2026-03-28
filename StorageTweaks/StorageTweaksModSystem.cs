@@ -168,6 +168,7 @@ public class StorageTweaksModSystem : ModSystem
         //         slot.Itemstack.Collectible.Code);
         // }
 
+        // list of item codes that are already in the destination inventory
         var existingCodes = new HashSet<string>();
         foreach (var destSlot in destInventory)
         {
@@ -188,18 +189,23 @@ public class StorageTweaksModSystem : ModSystem
     private static void ProcessInventorySlots(IInventory sourceInventory, IInventory destInventory,
         HashSet<string> existingCodes, IServerPlayer fromPlayer)
     {
+        List<ItemSlot> ignoredSlots = [];
         foreach (var slot in sourceInventory)
         {
             if (slot.Empty) continue;
             if (!existingCodes.Contains(slot.Itemstack.Collectible.Code.ToString())) continue;
 
+            ignoredSlots.Clear();
             var world = fromPlayer.Entity.World;
-            var suitedSlot = destInventory.GetBestSuitedSlot(slot);
-            while (suitedSlot != null && suitedSlot.weight != 0)
+            while (true)
             {
-                slot.TryPutInto(world, suitedSlot.slot, slot.StackSize);
-                suitedSlot = destInventory.GetBestSuitedSlot(slot);
+                var op = new ItemStackMoveOperation(world, EnumMouseButton.Left, 0, EnumMergePriority.AutoMerge,
+                    slot.StackSize);
+                var suitedSlot = destInventory.GetBestSuitedSlot(slot, op, ignoredSlots);
+                if (suitedSlot.slot == null || suitedSlot.weight == 0) break;
+                slot.TryPutInto(suitedSlot.slot, ref op);
                 if (slot.Empty) break;
+                ignoredSlots.Add(suitedSlot.slot);
             }
         }
     }
