@@ -6,18 +6,25 @@ using Vintagestory.API.MathTools;
 
 namespace StorageTweaks;
 
-public class SvgButton(
+public class SvgToggleButton(
     ICoreClientAPI capi,
     IAsset svgAsset,
     ActionConsumable onClick,
-    ElementBounds bounds)
+    Action<bool> onToggle,
+    ElementBounds bounds,
+    int activeColor,
+    int activeHoverColor)
     : GuiElement(capi, bounds)
 {
-    public static readonly int NormalColor = ColorUtil.ColorFromRgba(233, 221, 206, 255);
-    public static readonly int HoverColor = ColorUtil.ColorFromRgba(0, 221, 0, 127);
+    private readonly int _shadowColor = ColorUtil.ColorFromRgba(0, 0, 0, 64);
     private LoadedTexture _shadowTexture = new(capi);
     private LoadedTexture _normalTexture = new(capi);
     private LoadedTexture _hoverTexture = new(capi);
+    private LoadedTexture _activeTexture = new(capi);
+    private LoadedTexture _activeHoverTexture = new(capi);
+
+    // ReSharper disable once MemberCanBePrivate.Global
+    public bool IsActive { get; set; }
 
     public override void ComposeElements(Context ctxStatic, ImageSurface surface)
     {
@@ -29,13 +36,21 @@ public class SvgButton(
         api.Gui.LoadOrUpdateCairoTexture(shadowSurface, true, ref _shadowTexture);
         shadowSurface.Dispose();
 
-        var normalSurface = DrawNormalTexture(iconSize);
+        var normalSurface = DrawNormalTexture(iconSize, false);
         api.Gui.LoadOrUpdateCairoTexture(normalSurface, true, ref _normalTexture);
         normalSurface.Dispose();
 
-        var hoverSurface = DrawHoverTexture(iconSize);
+        var hoverSurface = DrawHoverTexture(iconSize, false);
         api.Gui.LoadOrUpdateCairoTexture(hoverSurface, true, ref _hoverTexture);
         hoverSurface.Dispose();
+
+        var activeSurface = DrawNormalTexture(iconSize, true);
+        api.Gui.LoadOrUpdateCairoTexture(activeSurface, true, ref _activeTexture);
+        activeSurface.Dispose();
+
+        var activeHoverSurface = DrawHoverTexture(iconSize, true);
+        api.Gui.LoadOrUpdateCairoTexture(activeHoverSurface, true, ref _activeHoverTexture);
+        activeHoverSurface.Dispose();
     }
 
     private ImageSurface DrawShadow(int size)
@@ -43,29 +58,37 @@ public class SvgButton(
         var surface = new ImageSurface(Format.Argb32, size, size);
         var ctx = new Context(surface);
 
-        api.Gui.DrawSvg(svgAsset, surface, 4, 3, size - 4, size - 4, ColorUtil.ColorFromRgba(0, 0, 0, 64));
+        api.Gui.DrawSvg(svgAsset, surface, 4, 3, size - 4, size - 4, _shadowColor);
 
         ctx.Dispose();
         return surface;
     }
 
-    private ImageSurface DrawNormalTexture(int size)
+    private ImageSurface DrawNormalTexture(int size, bool active)
     {
         var surface = new ImageSurface(Format.Argb32, size, size);
         var ctx = new Context(surface);
 
-        api.Gui.DrawSvg(svgAsset, surface, 2, 2, size - 4, size - 4, NormalColor);
+        var color = active
+            ? activeColor
+            : SvgButton.NormalColor;
+
+        api.Gui.DrawSvg(svgAsset, surface, 2, 2, size - 4, size - 4, color);
 
         ctx.Dispose();
         return surface;
     }
 
-    private ImageSurface DrawHoverTexture(int size)
+    private ImageSurface DrawHoverTexture(int size, bool active)
     {
         var surface = new ImageSurface(Format.Argb32, size, size);
         var ctx = new Context(surface);
 
-        api.Gui.DrawSvg(svgAsset, surface, 2, 2, size - 4, size - 4, HoverColor);
+        var color = active
+            ? activeHoverColor
+            : SvgButton.HoverColor;
+
+        api.Gui.DrawSvg(svgAsset, surface, 2, 2, size - 4, size - 4, color);
 
         ctx.Dispose();
 
@@ -80,12 +103,27 @@ public class SvgButton(
 
         api.Render.Render2DTexture(_shadowTexture.TextureId, (float)Bounds.absX, (float)Bounds.absY,
             (float)Bounds.InnerWidth, (float)Bounds.InnerHeight);
-        api.Render.Render2DTexture(_normalTexture.TextureId, (float)Bounds.absX, (float)Bounds.absY,
+
+        LoadedTexture mainTexture;
+        LoadedTexture hoverTexture;
+
+        if (IsActive)
+        {
+            mainTexture = _activeTexture;
+            hoverTexture = _activeHoverTexture;
+        }
+        else
+        {
+            mainTexture = _normalTexture;
+            hoverTexture = _hoverTexture;
+        }
+
+        api.Render.Render2DTexture(mainTexture.TextureId, (float)Bounds.absX, (float)Bounds.absY,
             (float)Bounds.InnerWidth, (float)Bounds.InnerHeight);
 
         if (mouseOver)
         {
-            api.Render.Render2DTexture(_hoverTexture.TextureId, (float)Bounds.absX, (float)Bounds.absY,
+            api.Render.Render2DTexture(hoverTexture.TextureId, (float)Bounds.absX, (float)Bounds.absY,
                 (float)Bounds.InnerWidth, (float)Bounds.InnerHeight);
         }
     }
@@ -93,8 +131,18 @@ public class SvgButton(
     public override void OnMouseDownOnElement(ICoreClientAPI capi, MouseEvent args)
     {
         base.OnMouseDownOnElement(capi, args);
-        if (!onClick()) return;
-        capi.Gui.PlaySound("tick");
+
+        IsActive = !IsActive;
+        onToggle.Invoke(IsActive);
+
+        if (!onClick())
+        {
+            IsActive = !IsActive;
+            onToggle.Invoke(IsActive);
+            return;
+        }
+
+        capi.Gui.PlaySound("toggleswitch");
     }
 
     public override void Dispose()
@@ -103,6 +151,8 @@ public class SvgButton(
         _shadowTexture.Dispose();
         _normalTexture.Dispose();
         _hoverTexture.Dispose();
+        _activeTexture.Dispose();
+        _activeHoverTexture.Dispose();
         GC.SuppressFinalize(this);
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Vintagestory.API.Config;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,6 +8,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using ProtoBuf;
+using Vintagestory.API.Datastructures;
 using Vintagestory.Common;
 
 namespace StorageTweaks;
@@ -24,13 +25,26 @@ public class UnloadInventoryPacket
     [ProtoMember(1)] public required string InventoryId;
 }
 
+[ProtoContract]
+public class UpdateFavoritesPacket
+{
+    /// <summary>
+    /// Collectable Code
+    /// </summary>
+    [ProtoMember(1)] public required string Code;
+
+    [ProtoMember(2)] public bool IsFavorite;
+}
+
 // ReSharper disable once UnusedType.Global
 public class StorageTweaksModSystem : ModSystem
 {
     private Harmony? _harmony;
+    private ICoreServerAPI? _serverApi;
 
-    // a list of quality foods and tools to exclude from automatic unloading
-    private static readonly HashSet<string> ToolAndFoodCodes = [];
+    /// A list of quality foods and tools to exclude from automatic unloading
+    // ReSharper disable once MemberCanBePrivate.Global
+    public static readonly List<string> ToolAndFoodCodes = [];
 
     public override bool ShouldLoad(EnumAppSide forSide) => true;
 
@@ -46,18 +60,47 @@ public class StorageTweaksModSystem : ModSystem
     {
         api.Network.RegisterChannel("storagetweaks")
             .RegisterMessageType<SortInventoryPacket>()
-            .RegisterMessageType<UnloadInventoryPacket>();
+            .RegisterMessageType<UnloadInventoryPacket>()
+            .RegisterMessageType<UpdateFavoritesPacket>();
+
+        FavoritesManager.Initialize(api);
+        GuiElementItemSlotGridPatch.SetApi(api);
     }
 
     public override void StartServerSide(ICoreServerAPI api)
     {
+        _serverApi = api;
         api.Network.RegisterChannel("storagetweaks")
             .RegisterMessageType<SortInventoryPacket>()
             .RegisterMessageType<UnloadInventoryPacket>()
+            .RegisterMessageType<UpdateFavoritesPacket>()
             .SetMessageHandler<SortInventoryPacket>(HandleSortInventory)
-            .SetMessageHandler<UnloadInventoryPacket>(HandleUnloadInventory);
+            .SetMessageHandler<UnloadInventoryPacket>(HandleUnloadInventory)
+            .SetMessageHandler<UpdateFavoritesPacket>(HandleUpdateFavorites);
 
         PopulateToolAndFoodCodes(api);
+
+        api.Event.PlayerJoin += OnPlayerJoin;
+    }
+
+    /// <summary>
+    /// When a player joins, we check if the favorites attribute is set and if not, set it to a default list.
+    /// </summary>
+    private static void OnPlayerJoin(IServerPlayer player)
+    {
+        var tree = player.Entity?.WatchedAttributes;
+        if (tree == null) return;
+
+        var favoritesAttr = tree.GetTreeAttribute(FavoritesManager.FavoritesKey);
+        if (favoritesAttr != null) return;
+        favoritesAttr = new TreeAttribute();
+        foreach (var code in ToolAndFoodCodes)
+        {
+            favoritesAttr.SetBool(code, true);
+        }
+
+        tree[FavoritesManager.FavoritesKey] = favoritesAttr;
+        tree.MarkPathDirty(FavoritesManager.FavoritesKey);
     }
 
     private static void PopulateToolAndFoodCodes(ICoreAPI api)
@@ -123,6 +166,32 @@ public class StorageTweaksModSystem : ModSystem
         SortInventoryInternal(fromPlayer.Entity.World, inventory);
     }
 
+    private static void HandleUpdateFavorites(IServerPlayer fromPlayer, UpdateFavoritesPacket packet)
+    {
+        var tree = fromPlayer.Entity?.WatchedAttributes;
+        if (tree == null) return;
+
+        var favoritesAttr = tree.GetTreeAttribute(FavoritesManager.FavoritesKey);
+
+        if (favoritesAttr == null)
+        {
+            fromPlayer.Entity?.World.Logger.Error("[StorageTweaks] Favorites attribute not initialized.");
+            return;
+        }
+
+
+        if (packet.IsFavorite)
+        {
+            favoritesAttr.SetBool(packet.Code, packet.IsFavorite);
+        }
+        else
+        {
+            favoritesAttr.RemoveAttribute(packet.Code);
+        }
+
+        tree.MarkPathDirty(FavoritesManager.FavoritesKey);
+    }
+
     private static void HandleUnloadInventory(IServerPlayer fromPlayer, UnloadInventoryPacket packet)
     {
         // should probably add checks if the player is allowed to access the inventory
@@ -152,28 +221,12 @@ public class StorageTweaksModSystem : ModSystem
             return;
         }
 
-        // // for debugging
-        // if (fromPlayer.Entity.World.Api is ICoreServerAPI serverApi)
-        // {
-        //     PopulateToolAndFoodCodes(serverApi);
-        // }
-        // logger.Debug("[StorageTweaks] exclusion codes:\n{0}",
-        //     string.Join("\n", ToolAndFoodCodes));
-
-        // // for debugging
-        // foreach (var slot in playerHotbar)
-        // {
-        //     if (slot.Empty) continue;
-        //     logger.Debug("[StorageTweaks] hotbar slot item: {0}",
-        //         slot.Itemstack.Collectible.Code);
-        // }
-
         // list of item codes that are already in the destination inventory
         var existingCodes = new HashSet<string>();
         foreach (var destSlot in destInventory)
         {
             if (destSlot.Empty) continue;
-            if (ToolAndFoodCodes.Contains(destSlot.Itemstack.Collectible.Code.ToString())) continue;
+            if (FavoritesManager.IsFavorite(fromPlayer, destSlot.Itemstack)) continue;
             existingCodes.Add(destSlot.Itemstack.Collectible.Code.ToString());
         }
 
@@ -189,8 +242,11 @@ public class StorageTweaksModSystem : ModSystem
     private static void ProcessInventorySlots(IInventory sourceInventory, IInventory destInventory,
         HashSet<string> existingCodes, IServerPlayer fromPlayer)
     {
+        // skip backup slots
+        var skipFirstN = sourceInventory is InventoryPlayerBackpacks backpacks ? backpacks.bagSlots.Length : 0;
+
         List<ItemSlot> ignoredSlots = [];
-        foreach (var slot in sourceInventory)
+        foreach (var slot in sourceInventory.Skip(skipFirstN))
         {
             if (slot.Empty) continue;
             if (!existingCodes.Contains(slot.Itemstack.Collectible.Code.ToString())) continue;
@@ -278,6 +334,7 @@ public class StorageTweaksModSystem : ModSystem
 
     public override void Dispose()
     {
+        _serverApi?.Event.PlayerJoin -= OnPlayerJoin;
         _harmony?.UnpatchAll("storagetweaks");
     }
 }

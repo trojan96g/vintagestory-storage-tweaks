@@ -1,5 +1,6 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable UnusedType.Global
+
 using HarmonyLib;
 using Vintagestory.API.Client;
 using System;
@@ -14,9 +15,9 @@ public class GuiDialogBlockEntityInventoryPatch
     {
         var capi = composer.Api;
         if (capi == null) return;
-        
+
         if (composer.DialogName == null) return;
-        
+
         if (!composer.DialogName.StartsWith("blockentityinventory", StringComparison.OrdinalIgnoreCase)) return;
 
         if (composer["storagetweaks-sort"] != null || composer["storagetweaks-unload"] != null)
@@ -24,8 +25,9 @@ public class GuiDialogBlockEntityInventoryPatch
 
         PatchUtils.AddButton(composer, "sort", -60,
             inventory => PatchUtils.SendPacket(capi, new SortInventoryPacket { InventoryId = inventory.InventoryID }));
-        
+
         PatchUtils.AddButton(composer, "unload", -86,
-            inventory => PatchUtils.SendPacket(capi, new UnloadInventoryPacket { InventoryId = inventory.InventoryID }));
+            inventory =>
+                PatchUtils.SendPacket(capi, new UnloadInventoryPacket { InventoryId = inventory.InventoryID }));
     }
 }
