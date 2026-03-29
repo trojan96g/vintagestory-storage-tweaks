@@ -19,8 +19,8 @@ public class GuiElementItemSlotGridPatch
     private static readonly FieldInfo InventoryField =
         AccessTools.Field(typeof(GuiElementItemSlotGridBase), "inventory");
 
-    private static readonly int FavoriteIconColor = ColorUtil.ColorFromRgba(247, 250, 72, 255);
-    private static readonly int FavoriteIconOutlineColor = ColorUtil.ColorFromRgba(161, 129, 111, 255);
+    private static readonly int FavoriteIconColor = ColorUtil.ColorFromRgba(247, 250, 72, 150);
+    private static readonly int FavoriteIconOutlineColor = ColorUtil.ColorFromRgba(161, 129, 111, 150);
     private const float IconSize = 16;
     private static LoadedTexture? _favoriteIconTexture;
     private static IAsset? _favoriteIconAsset;
@@ -34,13 +34,14 @@ public class GuiElementItemSlotGridPatch
     private static void EnsureIconTexture()
     {
         if (_capi == null) return;
+        var size = (int)GuiElement.scaled(IconSize);
+        // if size hasn't changed don't re-render
+        if (_favoriteIconTexture?.Width == size) return;
 
         _favoriteIconAsset = _capi.Assets.TryGet(new AssetLocation("storagetweaks", "textures/icons/favorite.svg"));
         if (_favoriteIconAsset == null) return;
 
-        var size = (int)GuiElement.scaled(IconSize);
-        // if size hasn't changed don't re-render
-        if (_favoriteIconTexture?.Width == size) return;
+        _favoriteIconTexture?.Dispose();
         _favoriteIconTexture = new LoadedTexture(_capi);
         var surface = new ImageSurface(Format.Argb32, size, size);
         var ctx = new Context(surface);
