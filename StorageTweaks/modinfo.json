@@ -10,6 +10,6 @@
   "side": "Universal",
   "version": "1.1.0",
   "dependencies": {
-    "game": "1.22.0-rc.5"
+    "game": "1.22.0-rc.6"
   }
 }
