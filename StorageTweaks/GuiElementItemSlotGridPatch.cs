@@ -19,8 +19,8 @@ public class GuiElementItemSlotGridPatch
     private static readonly FieldInfo InventoryField =
         AccessTools.Field(typeof(GuiElementItemSlotGridBase), "inventory");
 
-    private static readonly int Color = ColorUtil.ColorFromRgba(247, 250, 72, 255);
-    private static readonly int OutlineColor = ColorUtil.ColorFromRgba(161, 129, 111, 255);
+    private static readonly int FavoriteIconColor = ColorUtil.ColorFromRgba(247, 250, 72, 255);
+    private static readonly int FavoriteIconOutlineColor = ColorUtil.ColorFromRgba(161, 129, 111, 255);
     private const float IconSize = 16;
     private static LoadedTexture? _favoriteIconTexture;
     private static IAsset? _favoriteIconAsset;
@@ -45,8 +45,8 @@ public class GuiElementItemSlotGridPatch
         var surface = new ImageSurface(Format.Argb32, size, size);
         var ctx = new Context(surface);
         // draw a slightly upscaled version to act as an outline
-        _capi.Gui.DrawSvg(_favoriteIconAsset, surface, 0, 0, size, size, OutlineColor);
-        _capi.Gui.DrawSvg(_favoriteIconAsset, surface, 2, 2, size - 4, size - 4, Color);
+        _capi.Gui.DrawSvg(_favoriteIconAsset, surface, 0, 0, size, size, FavoriteIconOutlineColor);
+        _capi.Gui.DrawSvg(_favoriteIconAsset, surface, 2, 2, size - 4, size - 4, FavoriteIconColor);
         _capi.Gui.LoadOrUpdateCairoTexture(surface, true, ref _favoriteIconTexture);
         ctx.Dispose();
         surface.Dispose();
