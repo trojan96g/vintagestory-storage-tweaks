@@ -2,6 +2,7 @@
 // ReSharper disable UnusedType.Global
 // ReSharper disable ClassNeverInstantiated.Global
 
+using System;
 using HarmonyLib;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -31,6 +32,10 @@ public class GuiDialogBackpackInventoryPatch
             inventory => PatchUtils.SendPacket(capi, new SortInventoryPacket { InventoryId = inventory.InventoryID }));
 
         AddFavoriteToggle(composer, capi);
+        var bounds = ElementBounds.Fixed(EnumDialogArea.RightTop, -112, 5, 128, 24);
+        var toggleBtn = new GuiElementToggleButton(composer.Api, "", Lang.Get("storagetweaks:hide-favorites"), CairoFont.SmallButtonText(), on => GuiElementItemSlotGridPatch.HideFavorites = on, bounds, true);
+        toggleBtn.On = GuiElementItemSlotGridPatch.HideFavorites;
+        composer.AddInteractiveElement(toggleBtn, "storagetweaks-hide-favorites");
     }
 
     private static void AddFavoriteToggle(GuiComposer composer, ICoreClientAPI capi)

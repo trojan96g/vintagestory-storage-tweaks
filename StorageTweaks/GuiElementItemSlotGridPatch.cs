@@ -16,6 +16,8 @@ namespace StorageTweaks;
 [HarmonyPatch]
 public class GuiElementItemSlotGridPatch
 {
+    public static bool HideFavorites = false;
+    
     private static readonly FieldInfo InventoryField =
         AccessTools.Field(typeof(GuiElementItemSlotGridBase), "inventory");
 
@@ -61,6 +63,7 @@ public class GuiElementItemSlotGridPatch
         float deltaTime)
     {
         var favoritesManager = FavoritesManager.Get();
+        if (HideFavorites && !(favoritesManager?.IsFavoriteModeActive ?? HideFavorites)) return;
         if (favoritesManager == null || _capi == null) return;
         if (favoritesManager.GetFavoriteCount() == 0) return;
 
