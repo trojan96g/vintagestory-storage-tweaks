@@ -5,6 +5,7 @@
 using HarmonyLib;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 
 namespace StorageTweaks;
@@ -50,6 +51,12 @@ public class GuiDialogBackpackInventoryPatch
         );
         _favoriteToggleButton.IsActive = FavoritesManager.Get()?.IsFavoriteModeActive ?? false;
 
-        composer.AddInteractiveElement(_favoriteToggleButton, "storagetweaks-favorite");
+        composer.AddInteractiveElement(_favoriteToggleButton, "storagetweaks-favorite")
+            .AddHoverText(
+                Lang.Get("storagetweaks:toggle-favorite-mode-help"),
+                CairoFont.WhiteSmallText(),
+                250,
+                bounds.FlatCopy()
+            );
     }
 }
