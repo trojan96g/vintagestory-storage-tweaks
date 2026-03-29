@@ -3,12 +3,12 @@
 // ReSharper disable ClassNeverInstantiated.Global
 
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 using Cairo;
 using HarmonyLib;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.Common;
 
@@ -83,6 +83,9 @@ public class GuiElementItemSlotGridPatch
     private static readonly FieldInfo InventoryField =
         AccessTools.Field(typeof(GuiElementItemSlotGridBase), "inventory");
 
+    private static readonly FieldInfo RenderedSlotsField =
+        AccessTools.Field(typeof(GuiElementItemSlotGridBase), "renderedSlots");
+    
     public static bool HideFavorites
     {
         get => StorageTweaksModSystem.GetClientConfig().HideFavorites;
@@ -102,13 +105,16 @@ public class GuiElementItemSlotGridPatch
         if (favoritesManager == null) return;
 
         var slotIndex = 0;
-        foreach (KeyValuePair<int, ItemSlot> renderedSlot in __instance.renderedSlots)
+        var renderedSlots =
+            (Vintagestory.API.Datastructures.OrderedDictionary<int, ItemSlot>)RenderedSlotsField.GetValue(__instance)!;
+        foreach (var renderedSlot in renderedSlots)
         {
             if (slotIndex >= __instance.SlotBounds.Length) break;
 
             var value = renderedSlot.Value;
-            if (value.Inventory is not (InventoryPlayerBackpacks or InventoryPlayerHotbar)) continue;
-
+            if (value.Inventory is not InventoryPlayerBackPacks &&
+                value.Inventory.ClassName != GlobalConstants.hotBarInvClassName) continue;
+            
             if (value.Itemstack != null && favoritesManager.IsFavorite(value.Itemstack))
             {
                 var elementBounds = __instance.SlotBounds[slotIndex];
@@ -138,7 +144,8 @@ public class GuiElementItemSlotGridPatch
         var inventory = (IInventory?)InventoryField.GetValue(__instance);
         if (inventory == null || slotId < 0 || slotId >= inventory.Count) return true;
 
-        if (inventory is not (InventoryPlayerBackpacks or InventoryPlayerHotbar)) return true;
+        if (inventory is not InventoryPlayerBackPacks &&
+            inventory.ClassName != GlobalConstants.hotBarInvClassName) return true;
 
         var slot = inventory[slotId];
         if (slot?.Itemstack == null) return false;
