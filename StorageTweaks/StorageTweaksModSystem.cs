@@ -249,7 +249,7 @@ public class StorageTweaksModSystem : ModSystem
         HashSet<string> existingCodes, IServerPlayer fromPlayer)
     {
         // skip backup slots
-        var skipFirstN = sourceInventory is InventoryPlayerBackpacks backpacks ? backpacks.bagSlots.Length : 0;
+        var skipFirstN = sourceInventory is InventoryPlayerBackPacks backpacks ? backpacks.CountForNetworkPacket : 0;
 
         List<ItemSlot> ignoredSlots = [];
         foreach (var slot in sourceInventory.Skip(skipFirstN))
@@ -278,9 +278,10 @@ public class StorageTweaksModSystem : ModSystem
         // we should probably add checks if the player is allowed to access the inventory
 
         List<ItemSlot> slots;
-        if (inventory is InventoryPlayerBackpacks backpacks)
+        if (inventory is InventoryPlayerBackPacks backpacks)
         {
-            slots = backpacks.bagInv.ToList();
+            slots = backpacks.ToList();
+            slots = slots.Slice(backpacks.CountForNetworkPacket, slots.Count - backpacks.CountForNetworkPacket);
         }
         else
         {
@@ -423,6 +424,6 @@ public class StorageTweaksModSystem : ModSystem
     {
         _harmony?.UnpatchAll("storagetweaks");
         _clientApi?.StoreModConfig(GetClientConfig(), "storagetweaks.json");
-        _serverApi?.Event.PlayerJoin -= OnPlayerJoin;
+        if (_serverApi != null) _serverApi.Event.PlayerJoin -= OnPlayerJoin;
     }
 }
