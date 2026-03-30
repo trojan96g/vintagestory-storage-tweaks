@@ -36,11 +36,19 @@ public class UpdateFavoritesPacket
     [ProtoMember(2)] public bool IsFavorite;
 }
 
+
+public class StorageTweaksClientConfig
+{
+    public bool HideFavorites { get; set; }
+}
+
 // ReSharper disable once UnusedType.Global
 public class StorageTweaksModSystem : ModSystem
 {
+    private static StorageTweaksClientConfig _config = new StorageTweaksClientConfig();
     private Harmony? _harmony;
     private ICoreServerAPI? _serverApi;
+    private ICoreClientAPI? _clientApi;
 
     /// A list of quality foods and tools to exclude from automatic unloading
     // ReSharper disable once MemberCanBePrivate.Global
@@ -58,6 +66,8 @@ public class StorageTweaksModSystem : ModSystem
 
     public override void StartClientSide(ICoreClientAPI api)
     {
+        _clientApi = api;
+        LoadClientConfig(api);
         api.Network.RegisterChannel("storagetweaks")
             .RegisterMessageType<SortInventoryPacket>()
             .RegisterMessageType<UnloadInventoryPacket>()
@@ -331,9 +341,31 @@ public class StorageTweaksModSystem : ModSystem
             slots[i].MarkDirty();
         }
     }
+    
+    private static void LoadClientConfig(ICoreAPI api)
+    {
+        try
+        {
+            _config = api.LoadModConfig<StorageTweaksClientConfig>("storagetweaks.json");
+            if (_config != null) return;
+            _config = new StorageTweaksClientConfig();
+            api.StoreModConfig(_config, "storagetweaks.json");
+        }
+        catch (Exception)
+        {
+            _config = new StorageTweaksClientConfig();
+            api.StoreModConfig(_config, "storagetweaks.json");
+        }
+    }
+
+    public static StorageTweaksClientConfig GetClientConfig()
+    {
+        return _config;
+    }
 
     public override void Dispose()
     {
+        _clientApi?.StoreModConfig(GetClientConfig(), "storagetweaks.json");
         _serverApi?.Event.PlayerJoin -= OnPlayerJoin;
         _harmony?.UnpatchAll("storagetweaks");
     }

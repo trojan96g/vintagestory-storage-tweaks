@@ -16,8 +16,12 @@ namespace StorageTweaks;
 [HarmonyPatch]
 public class GuiElementItemSlotGridPatch
 {
-    public static bool HideFavorites = false;
-    
+    public static bool HideFavorites
+    {
+        get => StorageTweaksModSystem.GetClientConfig().HideFavorites;
+        set => StorageTweaksModSystem.GetClientConfig().HideFavorites = value;
+    }
+
     private static readonly FieldInfo InventoryField =
         AccessTools.Field(typeof(GuiElementItemSlotGridBase), "inventory");
 
