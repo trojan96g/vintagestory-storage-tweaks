@@ -1,3 +1,4 @@
 {
-  "storagetweaks:toggle-favorite-mode-help": "Toggle favorite mode: when active, clicking items adds or remove items from the favorites list instead of picking them up. Favorites do not get unloaded with the quick store/unload buttons."
+  "storagetweaks:toggle-favorite-mode-help": "Toggle favorite mode: when active, clicking items adds or remove items from the favorites list instead of picking them up. Favorites do not get unloaded with the quick store/unload buttons.",
+  "storagetweaks:hide-favorites-toggle": "Toggles whether favorite icon is always shown in item slots or only when favorite selection mode is active."
 }

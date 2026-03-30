@@ -32,16 +32,7 @@ public class GuiDialogBackpackInventoryPatch
             inventory => PatchUtils.SendPacket(capi, new SortInventoryPacket { InventoryId = inventory.InventoryID }));
 
         AddFavoriteToggle(composer, capi);
-        var bounds = ElementBounds.Fixed(EnumDialogArea.RightTop, -112, 5, 24, 24);
-        var toggleBtn = new GuiElementToggleButton(composer.Api, "", "", CairoFont.SmallButtonText(), on => GuiElementItemSlotGridPatch.HideFavorites = on, bounds, true);
-        toggleBtn.On = GuiElementItemSlotGridPatch.HideFavorites;
-        composer.AddInteractiveElement(toggleBtn, "storagetweaks-hide-favorites").AddDynamicCustomDraw(bounds,
-            (_, surface, _) =>
-            {
-                var iconAsset = new AssetLocation("storagetweaks", "textures/icons/favorites-hide.svg");
-                var icon = capi.Assets.TryGet(iconAsset);
-                if (icon != null) capi.Gui.DrawSvg(icon, surface, 2, 2, 20, 20, SvgButton.NormalColor);
-            });
+        AddFavoritesHideToggle(composer, capi);
     }
 
     private static void AddFavoriteToggle(GuiComposer composer, ICoreClientAPI capi)
@@ -69,5 +60,19 @@ public class GuiDialogBackpackInventoryPatch
                 250,
                 bounds.FlatCopy()
             );
+    }
+
+    private static void AddFavoritesHideToggle(GuiComposer composer, ICoreClientAPI capi)
+    {
+        var bounds = ElementBounds.Fixed(EnumDialogArea.RightTop, -112, 5, 24, 24);
+        var toggleBtn = new GuiElementToggleButton(composer.Api, "", "", CairoFont.SmallButtonText(), on => GuiElementItemSlotGridPatch.HideFavorites = on, bounds, true);
+        toggleBtn.On = GuiElementItemSlotGridPatch.HideFavorites;
+        composer.AddInteractiveElement(toggleBtn, "storagetweaks-hide-favorites").AddDynamicCustomDraw(bounds,
+            (_, surface, _) =>
+            {
+                var iconAsset = new AssetLocation("storagetweaks", "textures/icons/favorites-hide.svg");
+                var icon = capi.Assets.TryGet(iconAsset);
+                if (icon != null) capi.Gui.DrawSvg(icon, surface, 2, 2, 20, 20, SvgButton.NormalColor);
+            }).AddHoverText(Lang.Get("storagetweaks:hide-favorites-toggle"), CairoFont.WhiteSmallText(), 250, bounds.FlatCopy());
     }
 }
