@@ -72,7 +72,9 @@ public class GuiDialogBackpackInventoryPatch
             {
                 var iconAsset = new AssetLocation("storagetweaks", "textures/icons/favorites-hide.svg");
                 var icon = capi.Assets.TryGet(iconAsset);
-                if (icon != null) capi.Gui.DrawSvg(icon, surface, 2, 2, 20, 20, SvgButton.NormalColor);
+                var iconSize = (int)GuiElement.scaled(20.0);
+                var margin = (int)GuiElement.scaled(2);
+                if (icon != null) capi.Gui.DrawSvg(icon, surface, margin, margin, iconSize, iconSize, SvgButton.NormalColor);
             }).AddHoverText(Lang.Get("storagetweaks:hide-favorites-toggle"), CairoFont.WhiteSmallText(), 250, bounds.FlatCopy());
     }
 }
