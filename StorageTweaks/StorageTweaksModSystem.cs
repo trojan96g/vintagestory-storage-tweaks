@@ -58,14 +58,6 @@ public class StorageTweaksModSystem : ModSystem
 
     public override bool ShouldLoad(EnumAppSide forSide) => true;
 
-
-    public override void StartPre(ICoreAPI api)
-    {
-        base.StartPre(api);
-        _harmony = new Harmony("storagetweaks");
-        _harmony.PatchAll();
-    }
-
     public override void StartClientSide(ICoreClientAPI api)
     {
         _clientApi = api;
@@ -76,7 +68,9 @@ public class StorageTweaksModSystem : ModSystem
             .RegisterMessageType<UpdateFavoritesPacket>();
 
         FavoritesManager.Initialize(api);
-        GuiElementItemSlotGridPatch.SetApi(api);
+        FavoritedSlot.SetApi(api);
+        _harmony = new Harmony("storagetweaks");
+        _harmony.PatchAll();
     }
 
     public override void StartServerSide(ICoreServerAPI api)
