@@ -1,5 +1,42 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
-<svg width="20" height="20" version="1.1" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-  <path transform="matrix(1.1418 0 0 1.1418 -.93856 10.904)" d="m9.5798-8.2876 1.8511 5.7398 6.0309-0.013182-4.8869 3.5342 1.8762 5.7317-4.8714-3.5555-4.8714 3.5555 1.8762-5.7317-4.8869-3.5342 6.0309 0.013182z" fill="#f7fa48"/>
+
+<svg
+   width="20"
+   height="20"
+   version="1.1"
+   viewBox="0 0 20 20"
+   id="svg1"
+   sodipodi:docname="favorite.svg"
+   inkscape:version="1.4.3 (0d15f75042, 2025-12-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="59.05"
+     inkscape:cx="10"
+     inkscape:cy="10"
+     inkscape:window-width="2560"
+     inkscape:window-height="1368"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <path
+     transform="matrix(1.1418 0 0 1.1418 -.93856 10.904)"
+     d="m9.5798-8.2876 1.8511 5.7398 6.0309-0.013182-4.8869 3.5342 1.8762 5.7317-4.8714-3.5555-4.8714 3.5555 1.8762-5.7317-4.8869-3.5342 6.0309 0.013182z"
+     fill="#f7fa48"
+     id="path1"
+     style="fill:#ffffff;fill-opacity:1" />
 </svg>

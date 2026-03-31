@@ -3,6 +3,7 @@
 // ReSharper disable ClassNeverInstantiated.Global
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Cairo;
 using HarmonyLib;
@@ -34,9 +35,9 @@ public class FavoritedSlot
     public FavoritedSlot(ElementBounds bounds)
     {
         _bounds = bounds;
-        _marginLeft = (float)GuiElement.scaled(4);
-        _marginTop = (float)GuiElement.scaled(6);
-        _iconSize = (float)GuiElement.scaled(12);
+        _marginLeft = (float)GuiElement.scaled(1);
+        _marginTop = (float)GuiElement.scaled(1);
+        _iconSize = (float)GuiElement.scaled(20);
         EnsureIconTexture((int)_iconSize);
     }
 
@@ -45,7 +46,7 @@ public class FavoritedSlot
         if (_capi == null || _favoriteIconTexture == null) return;
         var x = (float)(_bounds.renderX + _marginLeft);
         var y = (float)(_bounds.renderY + _marginTop);
-        _capi.Render.Render2DTexture(_favoriteIconTexture.TextureId, x, y, _iconSize, _iconSize, 200);
+        _capi.Render.Render2DTexture(_favoriteIconTexture.TextureId, x, y, _iconSize, _iconSize, 50);
     }
 
     public static void SetApi(ICoreClientAPI api)
@@ -53,13 +54,15 @@ public class FavoritedSlot
         _capi = api;
     }
 
+    // ReSharper disable once MemberCanBeMadeStatic.Local
+    [SuppressMessage("Performance", "CA1822:Mark members as static")]
     private void EnsureIconTexture(int size)
     {
         if (_capi == null) return;
         // if size hasn't changed don't re-render
         // if (_favoriteIconTexture?.Width == size) return;
 
-        _favoriteIconAsset = _capi.Assets.TryGet(new AssetLocation("storagetweaks", "textures/icons/favorite.svg"));
+        _favoriteIconAsset = _capi.Assets.TryGet(new AssetLocation("storagetweaks", "textures/icons/favorite-slot-corner.svg"));
         if (_favoriteIconAsset == null) return;
 
         _favoriteIconTexture?.Dispose();
@@ -67,8 +70,8 @@ public class FavoritedSlot
         var surface = new ImageSurface(Format.Argb32, size, size);
         var ctx = new Context(surface);
         // draw a slightly upscaled version to act as an outline
-        _capi.Gui.DrawSvg(_favoriteIconAsset, surface, 0, 0, size, size, FavoriteIconOutlineColor);
-        _capi.Gui.DrawSvg(_favoriteIconAsset, surface, 2, 2, size - 4, size - 4, ColorUtil.ColorFromRgba(230, 200, 169, 150));
+        // _capi.Gui.DrawSvg(_favoriteIconAsset, surface, 2, 2, size - 3, size - 3, ColorUtil.ColorFromRgba(161, 129, 111, 80));
+        _capi.Gui.DrawSvg(_favoriteIconAsset, surface, 2, 2, size - 4, size - 4, ColorUtil.ColorFromRgba(247, 250, 72, 150));
         _capi.Gui.LoadOrUpdateCairoTexture(surface, true, ref _favoriteIconTexture);
         ctx.Dispose();
         surface.Dispose();
