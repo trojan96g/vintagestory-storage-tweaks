@@ -35,9 +35,9 @@ public class FavoritedSlot
     public FavoritedSlot(ElementBounds bounds)
     {
         _bounds = bounds;
-        _marginLeft = (float)GuiElement.scaled(1);
-        _marginTop = (float)GuiElement.scaled(1);
-        _iconSize = (float)GuiElement.scaled(20);
+        _marginLeft = (float)GuiElement.scaled(2);
+        _marginTop = (float)GuiElement.scaled(2);
+        _iconSize = (float)GuiElement.scaled(8);
         EnsureIconTexture((int)_iconSize);
     }
 
@@ -71,7 +71,7 @@ public class FavoritedSlot
         var ctx = new Context(surface);
         // draw a slightly upscaled version to act as an outline
         // _capi.Gui.DrawSvg(_favoriteIconAsset, surface, 2, 2, size - 3, size - 3, ColorUtil.ColorFromRgba(161, 129, 111, 80));
-        _capi.Gui.DrawSvg(_favoriteIconAsset, surface, 2, 2, size - 4, size - 4, ColorUtil.ColorFromRgba(247, 250, 72, 150));
+        _capi.Gui.DrawSvg(_favoriteIconAsset, surface, 0, 0, size, size, ColorUtil.ColorFromRgba(247, 250, 72, 150));
         _capi.Gui.LoadOrUpdateCairoTexture(surface, true, ref _favoriteIconTexture);
         ctx.Dispose();
         surface.Dispose();
