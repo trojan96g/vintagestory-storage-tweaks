@@ -46,6 +46,7 @@ public class StorageTweaksClientConfig
 // ReSharper disable once ClassNeverInstantiated.Global
 public class StorageTweaksModSystem : ModSystem
 {
+    private static readonly string[] SlotTypes = ["ItemSlotSurvival", "ItemSlotBagContent"];
     private static StorageTweaksClientConfig _config = new();
     private Harmony? _harmony;
     private ICoreServerAPI? _serverApi;
@@ -261,7 +262,7 @@ public class StorageTweaksModSystem : ModSystem
         {
             if (slot.Empty) continue;
             if (!existingCodes.Contains(slot.Itemstack.Collectible.Code.ToString())) continue;
-            if (slot.GetType().Name != "ItemSlotBagContent") continue;
+            if (!SlotTypes.Contains(slot.GetType().Name)) continue;
 
             ignoredSlots.Clear();
             var world = fromPlayer.Entity.World;
@@ -295,7 +296,7 @@ public class StorageTweaksModSystem : ModSystem
         // Excludes none vanilla and specialized bag slots from sorting,
         // for example, Quivers And Sheaths item slots
         // Examples: ItemSlotBagContentWithWildcardMatch, ItemSlotTakeOutOnly
-        slots = slots.Where(slot => slot.GetType().Name == "ItemSlotBagContent").ToList();
+        slots = slots.Where(slot => SlotTypes.Contains(slot.GetType().Name)).ToList();
 
         // Compact stacks
         for (var i = 0; i < slots.Count; i++)
