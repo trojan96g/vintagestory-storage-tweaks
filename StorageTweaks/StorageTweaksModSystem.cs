@@ -3,6 +3,7 @@ using Vintagestory.API.Config;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using HarmonyLib;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -42,9 +43,10 @@ public class StorageTweaksClientConfig
 }
 
 // ReSharper disable once UnusedType.Global
+// ReSharper disable once ClassNeverInstantiated.Global
 public class StorageTweaksModSystem : ModSystem
 {
-    private static StorageTweaksClientConfig _config = new StorageTweaksClientConfig();
+    private static StorageTweaksClientConfig _config = new();
     private Harmony? _harmony;
     private ICoreServerAPI? _serverApi;
     private ICoreClientAPI? _clientApi;
@@ -60,7 +62,7 @@ public class StorageTweaksModSystem : ModSystem
     {
         base.StartPre(api);
         _harmony = new Harmony("storagetweaks");
-        _harmony.PatchAll(typeof(StorageTweaksModSystem).Assembly);
+        _harmony.PatchAll();
     }
 
     public override void StartClientSide(ICoreClientAPI api)
@@ -93,7 +95,7 @@ public class StorageTweaksModSystem : ModSystem
     }
 
     /// <summary>
-    /// When a player joins, we check if the favorites attribute is set and if not, set it to a default list.
+    /// When a player joins, we check if the "storageTweaksFavorites" attribute is set and if not, set it to a default list.
     /// </summary>
     private static void OnPlayerJoin(IServerPlayer player)
     {
@@ -339,11 +341,67 @@ public class StorageTweaksModSystem : ModSystem
             return contentsComparison != 0 ? contentsComparison : b.StackSize.CompareTo(a.StackSize);
         });
 
-        // Clear and refill
-        for (var i = 0; i < slots.Count; i++)
+        // slots are grouped by tags so we can sort mining blocks into mining bag slots, for example
+        var slotsGroupedByTags = new Dictionary<EnumItemStorageFlags, List<ItemSlot>>();
+        foreach (var slot in slots)
         {
-            slots[i].Itemstack = i < itemStacks.Count ? itemStacks[i] : null;
-            slots[i].MarkDirty();
+            var group = slotsGroupedByTags.TryGetValue(slot.StorageType);
+            if (group != null)
+            {
+                group.Add(slot);
+                continue;
+            }
+
+            slotsGroupedByTags.Add(slot.StorageType, [slot]);
+        }
+
+        List<(EnumItemStorageFlags, IntRef, List<ItemSlot>)> sortedSlotGroups =
+            slotsGroupedByTags.OrderBy(x => BitOperations.PopCount((uint)x.Key))
+                .Select(x => (x.Key, IntRef.Create(0), x.Value)).ToList();
+
+        // store sorted items in best slot for item type
+        // i.e., mining stuff gets sorted into mining bags and stuff that can't go in specialized bags gets sorted into regular slots
+        foreach (var stack in itemStacks)
+        {
+            var stored = false;
+            foreach (var (storageType, i, group) in sortedSlotGroups)
+            {
+                if (i.GetValue() == group.Count) continue;
+                var slot = group[i.GetValue()];
+                slot.Itemstack = null;
+                // copies some logic from slot.CanHold();
+                var canHoldStack =
+                    (slot.CanStoreTags.IsEmpty || stack.Collectible.GetTags(stack).Overlaps(slot.CanStoreTags)) &&
+                    (stack.Collectible.GetStorageFlags(stack) & storageType) > 0;
+                if (!canHoldStack)
+                {
+                    slot.MarkDirty();
+                    continue;
+                }
+
+                slot.Itemstack = stack;
+                i.SetValue(i.GetValue() + 1);
+                stored = true;
+
+                slot.MarkDirty();
+                break;
+            }
+
+            if (!stored)
+            {
+                throw new Exception("Failed to store stack while sorting");
+            }
+        }
+
+        // clear the rest
+        foreach (var (_, i1, group) in sortedSlotGroups)
+        {
+            if (i1.GetValue() >= group.Count) continue;
+            for (var i = i1.GetValue(); i < group.Count; i++)
+            {
+                group[i].Itemstack = null;
+                group[i].MarkDirty();
+            }
         }
     }
 
