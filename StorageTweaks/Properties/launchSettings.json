@@ -6,7 +6,8 @@
       "commandLineArgs": "\"$(VINTAGE_STORY)/Vintagestory.dll\" --tracelog --addModPath \"$(ProjectDir)/bin/$(Configuration)/Mods\" --addOrigin \"$(ProjectDir)/assets\"",
       "workingDirectory": "$(VINTAGE_STORY)",
       "environmentVariables": {
-        "CAIRO_DEBUG_DISPOSE": "1"
+        "CAIRO_DEBUG_DISPOSE": "1",
+        "VAO_DEBUG_DISPOSE": "1"
       }
     },
     "Server": {

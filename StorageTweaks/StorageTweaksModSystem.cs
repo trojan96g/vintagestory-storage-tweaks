@@ -36,7 +36,6 @@ public class UpdateFavoritesPacket
     [ProtoMember(2)] public bool IsFavorite;
 }
 
-
 public class StorageTweaksClientConfig
 {
     public bool HideFavorites { get; set; }
@@ -260,6 +259,7 @@ public class StorageTweaksModSystem : ModSystem
         {
             if (slot.Empty) continue;
             if (!existingCodes.Contains(slot.Itemstack.Collectible.Code.ToString())) continue;
+            if (slot.GetType().Name != "ItemSlotBagContent") continue;
 
             ignoredSlots.Clear();
             var world = fromPlayer.Entity.World;
@@ -289,6 +289,11 @@ public class StorageTweaksModSystem : ModSystem
         {
             slots = inventory.ToList();
         }
+
+        // Excludes none vanilla and specialized bag slots from sorting,
+        // for example, Quivers And Sheaths item slots
+        // Examples: ItemSlotBagContentWithWildcardMatch, ItemSlotTakeOutOnly
+        slots = slots.Where(slot => slot.GetType().Name == "ItemSlotBagContent").ToList();
 
         // Compact stacks
         for (var i = 0; i < slots.Count; i++)
@@ -341,7 +346,7 @@ public class StorageTweaksModSystem : ModSystem
             slots[i].MarkDirty();
         }
     }
-    
+
     private static void LoadClientConfig(ICoreAPI api)
     {
         try
