@@ -341,7 +341,7 @@ public class StorageTweaksModSystem : ModSystem
             return contentsComparison != 0 ? contentsComparison : b.StackSize.CompareTo(a.StackSize);
         });
 
-        // slots are grouped by tags so we can sort mining blocks into mining bag slots, for example
+        // slots are grouped by most constrained to least constrained, so we can sort mining blocks into mining bag slots, for example
         var slotsGroupedByTags = new Dictionary<EnumItemStorageFlags, List<ItemSlot>>();
         foreach (var slot in slots)
         {
@@ -359,20 +359,18 @@ public class StorageTweaksModSystem : ModSystem
             slotsGroupedByTags.OrderBy(x => BitOperations.PopCount((uint)x.Key))
                 .Select(x => (x.Key, IntRef.Create(0), x.Value)).ToList();
 
-        // store sorted items in best slot for item type
+        // store sorted items in best slot for item type (most constrained slot that can hold the item)
         // i.e., mining stuff gets sorted into mining bags and stuff that can't go in specialized bags gets sorted into regular slots
         foreach (var stack in itemStacks)
         {
             var stored = false;
-            foreach (var (storageType, i, group) in sortedSlotGroups)
+            foreach (var (_, i, group) in sortedSlotGroups)
             {
                 if (i.GetValue() == group.Count) continue;
                 var slot = group[i.GetValue()];
                 slot.Itemstack = null;
-                // copies some logic from slot.CanHold();
-                var canHoldStack =
-                    (slot.CanStoreTags.IsEmpty || stack.Collectible.GetTags(stack).Overlaps(slot.CanStoreTags)) &&
-                    (stack.Collectible.GetStorageFlags(stack) & storageType) > 0;
+                var tempSlot = new DummySlot(stack);
+                var canHoldStack = slot.CanHold(tempSlot);
                 if (!canHoldStack)
                 {
                     slot.MarkDirty();
