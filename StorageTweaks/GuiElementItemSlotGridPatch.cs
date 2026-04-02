@@ -2,8 +2,8 @@
 // ReSharper disable UnusedType.Global
 // ReSharper disable ClassNeverInstantiated.Global
 
+using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Cairo;
 using HarmonyLib;
@@ -20,10 +20,8 @@ namespace StorageTweaks;
 public class FavoritedSlot
 {
     private static LoadedTexture? _favoriteIconTexture;
-    private static IAsset? _favoriteIconAsset;
     private static ICoreClientAPI? _capi;
-    private static readonly int FavoriteIconColor = ColorUtil.ColorFromRgba(181, 146, 118, 150);
-    private static readonly int FavoriteIconOutlineColor = ColorUtil.ColorFromRgba(161, 129, 111, 150);
+    private static readonly int FavoriteSlotCornerColor =  ColorUtil.ColorFromRgba(250, 230, 51, 180);
 
     private readonly ElementBounds _bounds;
     private readonly float _marginTop;
@@ -37,44 +35,41 @@ public class FavoritedSlot
         _bounds = bounds;
         _marginLeft = (float)GuiElement.scaled(2);
         _marginTop = (float)GuiElement.scaled(2);
-        _iconSize = (float)GuiElement.scaled(8);
-        EnsureIconTexture((int)_iconSize);
+        _iconSize = (float)GuiElement.scaled(10);
+        EnsureIconTexture((int)Math.Floor(_iconSize));
+        return;
+
+        void EnsureIconTexture(int size)
+        {
+            if (_capi == null) return;
+            // if size hasn't changed, don't re-render
+            // if (_favoriteIconTexture?.Width == size) return;
+
+            var favoriteIconAsset = _capi.Assets.TryGet(new AssetLocation("storagetweaks", "textures/icons/favorite-slot-corner.svg"));
+            if (favoriteIconAsset == null) return;
+
+            _favoriteIconTexture?.Dispose();
+            _favoriteIconTexture = new LoadedTexture(_capi);
+            var surface = new ImageSurface(Format.Argb32, size, size);
+            var ctx = new Context(surface);
+            _capi.Gui.DrawSvg(favoriteIconAsset, surface, 0, 0, size, size, FavoriteSlotCornerColor);
+            _capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref _favoriteIconTexture);
+            ctx.Dispose();
+            surface.Dispose();
+        }
     }
 
     public void Draw()
     {
         if (_capi == null || _favoriteIconTexture == null) return;
-        var x = (float)(_bounds.renderX + _marginLeft);
-        var y = (float)(_bounds.renderY + _marginTop);
-        _capi.Render.Render2DTexture(_favoriteIconTexture.TextureId, x, y, _iconSize, _iconSize, 50);
+        var x = (float)Math.Round(_bounds.renderX + _marginLeft, MidpointRounding.AwayFromZero);
+        var y = (float)Math.Round(_bounds.renderY + _marginTop, MidpointRounding.AwayFromZero);
+        _capi.Render.Render2DTexture(_favoriteIconTexture.TextureId, x, y, (float)Math.Floor(_iconSize), (float)Math.Floor(_iconSize));
     }
 
     public static void SetApi(ICoreClientAPI api)
     {
         _capi = api;
-    }
-
-    // ReSharper disable once MemberCanBeMadeStatic.Local
-    [SuppressMessage("Performance", "CA1822:Mark members as static")]
-    private void EnsureIconTexture(int size)
-    {
-        if (_capi == null) return;
-        // if size hasn't changed don't re-render
-        // if (_favoriteIconTexture?.Width == size) return;
-
-        _favoriteIconAsset = _capi.Assets.TryGet(new AssetLocation("storagetweaks", "textures/icons/favorite-slot-corner.svg"));
-        if (_favoriteIconAsset == null) return;
-
-        _favoriteIconTexture?.Dispose();
-        _favoriteIconTexture = new LoadedTexture(_capi);
-        var surface = new ImageSurface(Format.Argb32, size, size);
-        var ctx = new Context(surface);
-        // draw a slightly upscaled version to act as an outline
-        // _capi.Gui.DrawSvg(_favoriteIconAsset, surface, 2, 2, size - 3, size - 3, ColorUtil.ColorFromRgba(161, 129, 111, 80));
-        _capi.Gui.DrawSvg(_favoriteIconAsset, surface, 0, 0, size, size, ColorUtil.ColorFromRgba(247, 250, 72, 150));
-        _capi.Gui.LoadOrUpdateCairoTexture(surface, true, ref _favoriteIconTexture);
-        ctx.Dispose();
-        surface.Dispose();
     }
 }
 

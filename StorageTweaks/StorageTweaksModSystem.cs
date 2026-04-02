@@ -421,8 +421,8 @@ public class StorageTweaksModSystem : ModSystem
 
     public override void Dispose()
     {
+        _harmony?.UnpatchAll("storagetweaks");
         _clientApi?.StoreModConfig(GetClientConfig(), "storagetweaks.json");
         _serverApi?.Event.PlayerJoin -= OnPlayerJoin;
-        _harmony?.UnpatchAll("storagetweaks");
     }
 }
