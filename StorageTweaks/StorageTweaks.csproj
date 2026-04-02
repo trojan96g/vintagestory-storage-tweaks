@@ -29,6 +29,7 @@
             <HintPath>$(VINTAGE_STORY)/Lib/protobuf-net.dll</HintPath>
             <Private>false</Private>
         </Reference>
+        <Reference Include="../lib/**/*.dll" Private="false" />
     </ItemGroup>
 
     <ItemGroup>
