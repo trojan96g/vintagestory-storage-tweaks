@@ -3,7 +3,6 @@ using Vintagestory.API.Config;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Numerics;
 using HarmonyLib;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -46,8 +45,9 @@ public class StorageTweaksClientConfig
 // ReSharper disable once ClassNeverInstantiated.Global
 public class StorageTweaksModSystem : ModSystem
 {
-    private static readonly string[] SlotTypes = ["ItemSlotSurvival", "ItemSlotBagContent"];
+    private static readonly string[] SlotTypes = ["ItemSlotSurvival", "ItemSlotBagContent", "ItemSlotBagContentWithWildcardMatch"];
     private static StorageTweaksClientConfig _config = new();
+    private static bool _hasOverhaullib;
     private Harmony? _harmony;
     private ICoreServerAPI? _serverApi;
     private ICoreClientAPI? _clientApi;
@@ -57,6 +57,11 @@ public class StorageTweaksModSystem : ModSystem
     public static readonly List<string> ToolAndFoodCodes = [];
 
     public override bool ShouldLoad(EnumAppSide forSide) => true;
+
+    public override void StartPre(ICoreAPI api)
+    {
+        _hasOverhaullib = api.ModLoader.IsModEnabled("overhaullib");
+    }
 
     public override void StartClientSide(ICoreClientAPI api)
     {
@@ -256,7 +261,7 @@ public class StorageTweaksModSystem : ModSystem
         {
             if (slot.Empty) continue;
             if (!existingCodes.Contains(slot.Itemstack.Collectible.Code.ToString())) continue;
-            if (!SlotTypes.Contains(slot.GetType().Name)) continue;
+            if (IsExcludedSlot(slot)) continue;
 
             ignoredSlots.Clear();
             var world = fromPlayer.Entity.World;
@@ -287,10 +292,10 @@ public class StorageTweaksModSystem : ModSystem
             slots = inventory.ToList();
         }
 
-        // Excludes none vanilla and specialized bag slots from sorting,
+        // Excludes specialized bag slots from sorting,
         // for example, Quivers And Sheaths item slots
         // Examples: ItemSlotBagContentWithWildcardMatch, ItemSlotTakeOutOnly
-        slots = slots.Where(slot => SlotTypes.Contains(slot.GetType().Name)).ToList();
+        slots = slots.Where(slot => !IsExcludedSlot(slot)).ToList();
 
         // Compact stacks
         for (var i = 0; i < slots.Count; i++)
@@ -316,7 +321,7 @@ public class StorageTweaksModSystem : ModSystem
         var itemStacks = slots.Where(s => !s.Empty).Select(x =>
         {
             Debug.Assert(x.Itemstack != null);
-            return x.Itemstack.Clone();
+            return x.TakeOutWhole();
         }).ToList();
 
         // Sort by Class, Code, Contents and StackSize
@@ -336,66 +341,46 @@ public class StorageTweaksModSystem : ModSystem
             return contentsComparison != 0 ? contentsComparison : b.StackSize.CompareTo(a.StackSize);
         });
 
-        // slots are grouped by most constrained to least constrained, so we can sort mining blocks into mining bag slots, for example
-        var slotsGroupedByTags = new Dictionary<EnumItemStorageFlags, List<ItemSlot>>();
-        foreach (var slot in slots)
-        {
-            var group = slotsGroupedByTags.TryGetValue(slot.StorageType);
-            if (group != null)
-            {
-                group.Add(slot);
-                continue;
-            }
-
-            slotsGroupedByTags.Add(slot.StorageType, [slot]);
-        }
-
-        List<(EnumItemStorageFlags, IntRef, List<ItemSlot>)> sortedSlotGroups =
-            slotsGroupedByTags.OrderBy(x => BitOperations.PopCount((uint)x.Key))
-                .Select(x => (x.Key, IntRef.Create(0), x.Value)).ToList();
-
-        // store sorted items in best slot for item type (most constrained slot that can hold the item)
-        // i.e., mining stuff gets sorted into mining bags and stuff that can't go in specialized bags gets sorted into regular slots
+        var skippedSlots = new List<ItemSlot>();
+        // store the sorted stacks
         foreach (var stack in itemStacks)
         {
-            var stored = false;
-            foreach (var (_, i, group) in sortedSlotGroups)
+            skippedSlots.Clear();
+            var sourceSlot = new DummySlot(stack);
+            while (!sourceSlot.Empty && sourceSlot.Itemstack?.StackSize != 0)
             {
-                if (i.GetValue() == group.Count) continue;
-                var slot = group[i.GetValue()];
-                slot.Itemstack = null;
-                var tempSlot = new DummySlot(stack);
-                var canHoldStack = slot.CanHold(tempSlot);
-                if (!canHoldStack)
+                var op = new ItemStackMoveOperation(world, EnumMouseButton.Left, 0, EnumMergePriority.AutoMerge,
+                    stack.StackSize);
+                var weightedSlot = inventory.GetBestSuitedSlot(sourceSlot,
+                    null, skippedSlots);
+                if (weightedSlot.slot == null)
                 {
-                    slot.MarkDirty();
+                    throw new Exception("Failed to find a target slot to store stack");
+                }
+
+                skippedSlots.Add(weightedSlot.slot);
+                if (IsExcludedSlot(weightedSlot.slot))
+                {
+                    world.Logger.Warning("Got best suited slot that is excluded: {0}", weightedSlot.slot.GetType().Name);
                     continue;
                 }
 
-                slot.Itemstack = stack;
-                i.SetValue(i.GetValue() + 1);
-                stored = true;
-
-                slot.MarkDirty();
-                break;
-            }
-
-            if (!stored)
-            {
-                throw new Exception("Failed to store stack while sorting");
+                sourceSlot.TryPutInto(weightedSlot.slot, ref op);
             }
         }
 
-        // clear the rest
-        foreach (var (_, i1, group) in sortedSlotGroups)
+        foreach (var slot in slots)
         {
-            if (i1.GetValue() >= group.Count) continue;
-            for (var i = i1.GetValue(); i < group.Count; i++)
+            if (slot.Empty)
             {
-                group[i].Itemstack = null;
-                group[i].MarkDirty();
+                slot.MarkDirty();
             }
         }
+    }
+
+    private static bool IsExcludedSlot(ItemSlot slot)
+    {
+        return !SlotTypes.Contains(slot.GetType().Name);
     }
 
     private static void LoadClientConfig(ICoreAPI api)
