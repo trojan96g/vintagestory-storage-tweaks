@@ -1,13 +1,19 @@
 using System;
 using System.Linq;
+using System.Reflection;
+using HarmonyLib;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
+using Vintagestory.GameContent;
 
 namespace StorageTweaks;
 
 public static class PatchUtils
 {
+    private static readonly FieldInfo GuiDialogCreatureContentsInv =
+        AccessTools.Field(typeof(GuiDialogCreatureContents), "inv");
+
     public static void AddButton(GuiComposer composer, string type, int xOffset, Action<IInventory> onClick)
     {
         var capi = composer.Api;
@@ -45,10 +51,19 @@ public static class PatchUtils
     {
         if (composer.DialogName == "inventory-backpack")
         {
-            return composer.Api.World.Player.InventoryManager.GetOwnInventory(GlobalConstants.backpackInvClassName) as InventoryBase;
+            return composer.Api.World.Player.InventoryManager.GetOwnInventory(GlobalConstants.backpackInvClassName) as
+                InventoryBase;
         }
+
         var dialog = composer.Api.Gui.OpenedGuis.Find(d => d.Composers.Values.Any(c => c == composer));
-        return dialog is GuiDialogBlockEntityInventory inventoryDialog ? inventoryDialog.Inventory : null;
+
+        return dialog switch
+        {
+            GuiDialogBlockEntityInventory inventoryDialog => inventoryDialog.Inventory,
+            GuiDialogCreatureContents creatureContents => (InventoryGeneric?)GuiDialogCreatureContentsInv.GetValue(
+                creatureContents),
+            _ => null
+        };
     }
 
     public static void SendPacket<T>(ICoreClientAPI capi, T packet)
