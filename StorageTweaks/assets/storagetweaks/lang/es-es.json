@@ -1,0 +1,15 @@
+{
+  "// Storage Tweaks v1.1.5 || Enlace de VS ModDB: https://mods.vintagestory.at/storagetweaks ": "",
+  "// Traducido por C4BR3R4 || Última Modificación: 31/MAR/2026 || Registro de Cambios: https://c4br3r4.es/index.php?topic=1472.0 ": "",
+
+  "toggle-favorite-mode-help": "<strong>Modo Favorito</strong>\n<i>Activar o desactivar el Modo de selección de objetos Favoritos.</i>\n\nLos objetos favoritos no se transfieren al usar la función de almacenamiento rápido.\n\n<font color='silver'><strong>Activado:</strong>\nAl pulsar sobre los objetos del Cinturón, en vez ser recogerlos, son añadidos o retirados de la Lista de Favoritos.</font>\n\n<font color='darkgray'><strong>Desactivado:</strong>\nSin acción. Los objetos son recogidos como de construmbre.</font>",
+  "toggle-hide-favorites": "<strong>Favorito Oculto</strong>\n<i>Activar o desactivar la ocultación del icono Favorito del objeto.</i>\n\n<font color='silver'><strong>Activado:</strong>\nEl icono de objeto Favorito sólo se muestra cuando está activado el «Modo Favoritos».\n\n<strong>Desactivado:</strong>\nEl icono del objeto Favorito se muestra siempre.</font>",
+
+
+
+  "// Creadas para intentar añadir una descripción a los botones ": "",
+  "compact-and-sort": "Ordenar",
+  "quick-store": "Transferir",
+
+  "// FINAL de Líneas": ""
+}

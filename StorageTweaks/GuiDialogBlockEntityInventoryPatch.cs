@@ -5,6 +5,7 @@ using HarmonyLib;
 using Vintagestory.API.Client;
 using System;
 using System.Linq;
+using Vintagestory.API.Config;
 
 namespace StorageTweaks;
 
@@ -27,10 +28,10 @@ public class GuiDialogBlockEntityInventoryPatch
             return;
 
         PatchUtils.AddButton(composer, "sort", -60,
-            inventory => PatchUtils.SendPacket(capi, new SortInventoryPacket { InventoryId = inventory.InventoryID }));
+            inventory => PatchUtils.SendPacket(capi, new SortInventoryPacket { InventoryId = inventory.InventoryID }), Lang.Get("storagetweaks:compact-and-sort"));
 
         PatchUtils.AddButton(composer, "unload", -86,
             inventory =>
-                PatchUtils.SendPacket(capi, new UnloadInventoryPacket { InventoryId = inventory.InventoryID }));
+                PatchUtils.SendPacket(capi, new UnloadInventoryPacket { InventoryId = inventory.InventoryID }), Lang.Get("storagetweaks:quick-store"));
     }
 }
