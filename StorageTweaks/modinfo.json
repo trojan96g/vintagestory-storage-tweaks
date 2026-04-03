@@ -8,8 +8,8 @@
   ],
   "description": "Adds compact/sort and quick-unload buttons to chests.",
   "side": "Universal",
-  "version": "1.1.7",
+  "version": "1.1.9",
   "dependencies": {
-    "game": "1.22.0-rc.6"
+    "game": "1.22.0-rc.7"
   }
 }
