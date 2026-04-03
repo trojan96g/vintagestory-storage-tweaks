@@ -14,7 +14,7 @@ public static class PatchUtils
     private static readonly FieldInfo GuiDialogCreatureContentsInv =
         AccessTools.Field(typeof(GuiDialogCreatureContents), "inv");
 
-    public static void AddButton(GuiComposer composer, string type, int xOffset, Action<IInventory> onClick)
+    public static void AddButton(GuiComposer composer, string type, int xOffset, Action<IInventory> onClick, string hoverText)
     {
         var capi = composer.Api;
         var iconAsset = new AssetLocation("storagetweaks", $"textures/icons/{type}.svg");
@@ -44,7 +44,12 @@ public static class PatchUtils
             bounds
         );
 
-        composer.AddInteractiveElement(btn, $"storagetweaks-{type}");
+        composer.AddInteractiveElement(btn, $"storagetweaks-{type}").AddHoverText(
+            hoverText,
+            CairoFont.WhiteSmallText(),
+            250,
+            bounds.FlatCopy()
+        );
     }
 
     private static InventoryBase? GetInventoryForComposer(GuiComposer composer)

@@ -2,7 +2,6 @@
 // ReSharper disable UnusedType.Global
 // ReSharper disable ClassNeverInstantiated.Global
 
-using System;
 using HarmonyLib;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -29,7 +28,7 @@ public class GuiDialogBackpackInventoryPatch
             return;
 
         PatchUtils.AddButton(composer, "sort", -60,
-            inventory => PatchUtils.SendPacket(capi, new SortInventoryPacket { InventoryId = inventory.InventoryID }));
+            inventory => PatchUtils.SendPacket(capi, new SortInventoryPacket { InventoryId = inventory.InventoryID }), Lang.Get("storagetweaks:compact-and-sort"));
 
         AddFavoriteToggle(composer, capi);
         AddFavoritesHideToggle(composer, capi);
@@ -75,6 +74,6 @@ public class GuiDialogBackpackInventoryPatch
                 var iconSize = (int)GuiElement.scaled(20.0);
                 var margin = (int)GuiElement.scaled(2);
                 if (icon != null) capi.Gui.DrawSvg(icon, surface, margin, margin, iconSize, iconSize, SvgButton.NormalColor);
-            }).AddHoverText(Lang.Get("storagetweaks:hide-favorites-toggle"), CairoFont.WhiteSmallText(), 250, bounds.FlatCopy());
+            }).AddHoverText(Lang.Get("storagetweaks:toggle-hide-favorites"), CairoFont.WhiteSmallText(), 250, bounds.FlatCopy());
     }
 }
