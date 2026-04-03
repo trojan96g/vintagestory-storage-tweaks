@@ -47,7 +47,6 @@ public class StorageTweaksModSystem : ModSystem
 {
     private static readonly string[] SlotTypes = ["ItemSlotSurvival", "ItemSlotBagContent", "ItemSlotBagContentWithWildcardMatch"];
     private static StorageTweaksClientConfig _config = new();
-    private static bool _hasOverhaullib;
     private Harmony? _harmony;
     private ICoreServerAPI? _serverApi;
     private ICoreClientAPI? _clientApi;
@@ -57,11 +56,6 @@ public class StorageTweaksModSystem : ModSystem
     public static readonly List<string> ToolAndFoodCodes = [];
 
     public override bool ShouldLoad(EnumAppSide forSide) => true;
-
-    public override void StartPre(ICoreAPI api)
-    {
-        _hasOverhaullib = api.ModLoader.IsModEnabled("overhaullib");
-    }
 
     public override void StartClientSide(ICoreClientAPI api)
     {

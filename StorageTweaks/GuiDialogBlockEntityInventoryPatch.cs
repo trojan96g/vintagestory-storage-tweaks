@@ -4,12 +4,15 @@
 using HarmonyLib;
 using Vintagestory.API.Client;
 using System;
+using System.Linq;
 
 namespace StorageTweaks;
 
 [HarmonyPatch(typeof(GuiComposerHelpers), "AddDialogTitleBar")]
 public class GuiDialogBlockEntityInventoryPatch
 {
+    private static readonly string[] DialogNamePrefixes = ["blockentityinventory", "attachedcontainer"];
+    
     [HarmonyPostfix]
     public static void Postfix(GuiComposer composer)
     {
@@ -18,7 +21,7 @@ public class GuiDialogBlockEntityInventoryPatch
 
         if (composer.DialogName == null) return;
 
-        if (!composer.DialogName.StartsWith("blockentityinventory", StringComparison.OrdinalIgnoreCase)) return;
+        if (!DialogNamePrefixes.Any(prefix => composer.DialogName.StartsWith(prefix, StringComparison.Ordinal))) return;
 
         if (composer["storagetweaks-sort"] != null || composer["storagetweaks-unload"] != null)
             return;
