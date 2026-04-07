@@ -12,7 +12,7 @@ namespace StorageTweaks.Patches;
 public class GuiDialogBlockEntityInventoryPatch
 {
     private static readonly string[] DialogNamePrefixes = ["blockentityinventory", "attachedcontainer"];
-    
+
     [HarmonyPostfix]
     public static void Postfix(GuiComposer composer)
     {

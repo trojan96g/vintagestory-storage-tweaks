@@ -6,16 +6,18 @@ namespace StorageTweaks;
 
 public class FavoritesManager
 {
-    private static FavoritesManager? _instance;
     public const string FavoritesKey = "storageTweaksFavorites";
-    private readonly IClientNetworkChannel _networkChannel;
+    private static FavoritesManager? _instance;
     private readonly ICoreClientAPI _capi;
+    private readonly IClientNetworkChannel _networkChannel;
 
     private FavoritesManager(ICoreClientAPI capi)
     {
         _capi = capi;
         _networkChannel = capi.Network.GetChannel("storagetweaks");
     }
+
+    public bool IsFavoriteModeActive { get; set; }
 
     public static void Initialize(ICoreClientAPI capi)
     {
@@ -26,8 +28,6 @@ public class FavoritesManager
     {
         return _instance;
     }
-
-    public bool IsFavoriteModeActive { get; set; }
 
     public bool IsFavorite(ItemStack stack)
     {
@@ -55,14 +55,8 @@ public class FavoritesManager
                 tree[FavoritesKey] = favoritesAttr;
             }
 
-            if (newState)
-            {
-                favoritesAttr.SetBool(key, newState);
-            }
-            else
-            {
-                favoritesAttr.RemoveAttribute(key);
-            }
+            if (newState) favoritesAttr.SetBool(key, newState);
+            else favoritesAttr.RemoveAttribute(key);
         }
 
         _networkChannel.SendPacket(new UpdateFavoritesPacket { Code = key, IsFavorite = newState });

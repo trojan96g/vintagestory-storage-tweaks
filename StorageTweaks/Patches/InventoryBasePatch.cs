@@ -10,10 +10,10 @@ using Vintagestory.API.Common;
 namespace StorageTweaks.Patches;
 
 /// <summary>
-/// Increase the suitability of bag slots that don't have the wildcard `*`.
-/// This is to decrease the priority of the "Backpacks" mod slots
-/// and increase the priority of the "Quivers and Sheaths" slots.
-/// See: https://mods.vintagestory.at/storagetweaks#cmt-147321
+///     Increase the suitability of bag slots that don't have the wildcard `*`.
+///     This is to decrease the priority of the "Backpacks" mod slots
+///     and increase the priority of the "Quivers and Sheaths" slots.
+///     See: https://mods.vintagestory.at/storagetweaks#cmt-147321
 /// </summary>
 [HarmonyPatch(typeof(InventoryBase), "GetSuitability")]
 public class InventoryBasePatch

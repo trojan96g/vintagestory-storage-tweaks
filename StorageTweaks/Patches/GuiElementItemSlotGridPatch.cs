@@ -15,20 +15,21 @@ using Vintagestory.Common;
 namespace StorageTweaks.Patches;
 
 /// <summary>
-/// Slot with item(s) in the favorite list
+///     Slot with item(s) in the favorite list
 /// </summary>
 public class FavoritedSlot
 {
     private static LoadedTexture? _favoriteIconTexture;
     private static ICoreClientAPI? _capi;
-    private static readonly int FavoriteSlotCornerColor =  ColorUtil.ColorFromRgba(250, 230, 51, 180);
+    private static readonly int FavoriteSlotCornerColor = ColorUtil.ColorFromRgba(250, 230, 51, 180);
 
     private readonly ElementBounds _bounds;
-    private readonly float _marginTop;
-    private readonly float _marginLeft;
     private readonly float _iconSize;
+    private readonly float _marginLeft;
+    private readonly float _marginTop;
+
     /// <summary>
-    /// Slot with item(s) in the favorite list
+    ///     Slot with item(s) in the favorite list
     /// </summary>
     public FavoritedSlot(ElementBounds bounds)
     {
@@ -39,13 +40,14 @@ public class FavoritedSlot
         EnsureIconTexture((int)Math.Floor(_iconSize));
         return;
 
-        void EnsureIconTexture(int size)
+        static void EnsureIconTexture(int size)
         {
             if (_capi == null) return;
             // if size hasn't changed, don't re-render
-            // if (_favoriteIconTexture?.Width == size) return;
+            if (_favoriteIconTexture?.Width == size) return;
 
-            var favoriteIconAsset = _capi.Assets.TryGet(new AssetLocation("storagetweaks", "textures/icons/favorite-slot-corner.svg"));
+            var favoriteIconAsset =
+                _capi.Assets.TryGet(new AssetLocation("storagetweaks", "textures/icons/favorite-slot-corner.svg"));
             if (favoriteIconAsset == null) return;
 
             _favoriteIconTexture?.Dispose();
@@ -62,9 +64,11 @@ public class FavoritedSlot
     public void Draw()
     {
         if (_capi == null || _favoriteIconTexture == null) return;
+
         var x = (float)Math.Round(_bounds.renderX + _marginLeft, MidpointRounding.AwayFromZero);
         var y = (float)Math.Round(_bounds.renderY + _marginTop, MidpointRounding.AwayFromZero);
-        _capi.Render.Render2DTexture(_favoriteIconTexture.TextureId, x, y, (float)Math.Floor(_iconSize), (float)Math.Floor(_iconSize));
+        _capi.Render.Render2DTexture(_favoriteIconTexture.TextureId, x, y, (float)Math.Floor(_iconSize),
+            (float)Math.Floor(_iconSize));
     }
 
     public static void SetApi(ICoreClientAPI api)
@@ -76,16 +80,17 @@ public class FavoritedSlot
 [HarmonyPatch]
 public class GuiElementItemSlotGridPatch
 {
+    private static readonly FieldInfo InventoryField =
+        AccessTools.Field(typeof(GuiElementItemSlotGridBase), "inventory");
+
     public static bool HideFavorites
     {
         get => StorageTweaksModSystem.GetClientConfig().HideFavorites;
         set => StorageTweaksModSystem.GetClientConfig().HideFavorites = value;
     }
 
-    private static readonly FieldInfo InventoryField =
-        AccessTools.Field(typeof(GuiElementItemSlotGridBase), "inventory");
-
-    [HarmonyPostfix, HarmonyPatch(typeof(GuiElementItemSlotGridBase), "RenderInteractiveElements")]
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(GuiElementItemSlotGridBase), "RenderInteractiveElements")]
     public static void PostfixRenderInteractiveElements(
         // ReSharper disable once InconsistentNaming
         GuiElementItemSlotGridBase __instance,
@@ -103,6 +108,7 @@ public class GuiElementItemSlotGridPatch
 
             var value = renderedSlot.Value;
             if (value.Inventory is not (InventoryPlayerBackpacks or InventoryPlayerHotbar)) continue;
+
             if (value.Itemstack != null && favoritesManager.IsFavorite(value.Itemstack))
             {
                 var elementBounds = __instance.SlotBounds[slotIndex];
@@ -113,7 +119,8 @@ public class GuiElementItemSlotGridPatch
         }
     }
 
-    [HarmonyPrefix, HarmonyPatch(typeof(GuiElementItemSlotGridBase), "SlotClick")]
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(GuiElementItemSlotGridBase), "SlotClick")]
     // ReSharper disable UnusedParameter.Global
     public static bool PrefixSlotClick(
         // ReSharper disable once InconsistentNaming
@@ -134,10 +141,7 @@ public class GuiElementItemSlotGridPatch
         if (inventory is not (InventoryPlayerBackpacks or InventoryPlayerHotbar)) return true;
 
         var slot = inventory[slotId];
-        if (slot?.Itemstack == null)
-        {
-            return false;
-        }
+        if (slot?.Itemstack == null) return false;
 
         favoritesManager.ToggleFavorite(slot.Itemstack);
         api.Gui.PlaySound("tick");

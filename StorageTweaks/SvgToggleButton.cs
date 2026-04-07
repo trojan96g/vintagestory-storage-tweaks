@@ -17,11 +17,11 @@ public class SvgToggleButton(
     : GuiElement(capi, bounds)
 {
     private readonly int _shadowColor = ColorUtil.ColorFromRgba(0, 0, 0, 64);
-    private LoadedTexture _shadowTexture = new(capi);
-    private LoadedTexture _normalTexture = new(capi);
-    private LoadedTexture _hoverTexture = new(capi);
-    private LoadedTexture _activeTexture = new(capi);
     private LoadedTexture _activeHoverTexture = new(capi);
+    private LoadedTexture _activeTexture = new(capi);
+    private LoadedTexture _hoverTexture = new(capi);
+    private LoadedTexture _normalTexture = new(capi);
+    private LoadedTexture _shadowTexture = new(capi);
 
     // ReSharper disable once MemberCanBePrivate.Global
     public bool IsActive { get; set; }
@@ -122,10 +122,8 @@ public class SvgToggleButton(
             (float)Bounds.InnerWidth, (float)Bounds.InnerHeight);
 
         if (mouseOver)
-        {
             api.Render.Render2DTexture(hoverTexture.TextureId, (float)Bounds.absX, (float)Bounds.absY,
                 (float)Bounds.InnerWidth, (float)Bounds.InnerHeight);
-        }
     }
 
     public override void OnMouseDownOnElement(ICoreClientAPI capi, MouseEvent args)

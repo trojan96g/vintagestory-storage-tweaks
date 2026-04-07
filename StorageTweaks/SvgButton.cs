@@ -15,9 +15,9 @@ public class SvgButton(
 {
     public static readonly int NormalColor = ColorUtil.ColorFromRgba(233, 221, 206, 255);
     public static readonly int HoverColor = ColorUtil.ColorFromRgba(0, 221, 0, 127);
-    private LoadedTexture _shadowTexture = new(capi);
-    private LoadedTexture _normalTexture = new(capi);
     private LoadedTexture _hoverTexture = new(capi);
+    private LoadedTexture _normalTexture = new(capi);
+    private LoadedTexture _shadowTexture = new(capi);
 
     public override void ComposeElements(Context ctxStatic, ImageSurface surface)
     {
@@ -84,16 +84,15 @@ public class SvgButton(
             (float)Bounds.InnerWidth, (float)Bounds.InnerHeight);
 
         if (mouseOver)
-        {
             api.Render.Render2DTexture(_hoverTexture.TextureId, (float)Bounds.absX, (float)Bounds.absY,
                 (float)Bounds.InnerWidth, (float)Bounds.InnerHeight);
-        }
     }
 
     public override void OnMouseDownOnElement(ICoreClientAPI capi, MouseEvent args)
     {
         base.OnMouseDownOnElement(capi, args);
         if (!onClick()) return;
+
         capi.Gui.PlaySound("tick");
     }
 

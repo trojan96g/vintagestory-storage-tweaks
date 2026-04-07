@@ -1,15 +1,15 @@
 using System;
-using Vintagestory.API.Config;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using HarmonyLib;
-using Vintagestory.API.Client;
-using Vintagestory.API.Common;
-using Vintagestory.API.Server;
 using ProtoBuf;
 using StorageTweaks.Patches;
+using Vintagestory.API.Client;
+using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
+using Vintagestory.API.Server;
 using Vintagestory.Common;
 
 namespace StorageTweaks;
@@ -30,7 +30,7 @@ public class UnloadInventoryPacket
 public class UpdateFavoritesPacket
 {
     /// <summary>
-    /// Collectable Code
+    ///     Collectable Code
     /// </summary>
     [ProtoMember(1)] public required string Code;
 
@@ -46,17 +46,23 @@ public class StorageTweaksClientConfig
 // ReSharper disable once ClassNeverInstantiated.Global
 public class StorageTweaksModSystem : ModSystem
 {
-    private static readonly string[] SlotTypes = ["ItemSlotSurvival", "ItemSlotBagContent", "ItemSlotBagContentWithWildcardMatch"];
+    private static readonly string[] SlotTypes =
+        ["ItemSlotSurvival", "ItemSlotBagContent", "ItemSlotBagContentWithWildcardMatch"];
+
     private static StorageTweaksClientConfig _config = new();
-    private Harmony? _harmony;
-    private ICoreServerAPI? _serverApi;
-    private ICoreClientAPI? _clientApi;
 
     /// A list of quality foods and tools to exclude from automatic unloading
     // ReSharper disable once MemberCanBePrivate.Global
     public static readonly List<string> ToolAndFoodCodes = [];
 
-    public override bool ShouldLoad(EnumAppSide forSide) => true;
+    private ICoreClientAPI? _clientApi;
+    private Harmony? _harmony;
+    private ICoreServerAPI? _serverApi;
+
+    public override bool ShouldLoad(EnumAppSide forSide)
+    {
+        return true;
+    }
 
     public override void StartClientSide(ICoreClientAPI api)
     {
@@ -90,7 +96,8 @@ public class StorageTweaksModSystem : ModSystem
     }
 
     /// <summary>
-    /// When a player joins, we check if the "storageTweaksFavorites" attribute is set and if not, set it to a default list.
+    ///     When a player joins, we check if the "storageTweaksFavorites" attribute is set and if not, set it to a default
+    ///     list.
     /// </summary>
     private static void OnPlayerJoin(IServerPlayer player)
     {
@@ -99,11 +106,9 @@ public class StorageTweaksModSystem : ModSystem
 
         var favoritesAttr = tree.GetTreeAttribute(FavoritesManager.FavoritesKey);
         if (favoritesAttr != null) return;
+
         favoritesAttr = new TreeAttribute();
-        foreach (var code in ToolAndFoodCodes)
-        {
-            favoritesAttr.SetBool(code, true);
-        }
+        foreach (var code in ToolAndFoodCodes) favoritesAttr.SetBool(code, true);
 
         tree[FavoritesManager.FavoritesKey] = favoritesAttr;
         tree.MarkPathDirty(FavoritesManager.FavoritesKey);
@@ -186,14 +191,8 @@ public class StorageTweaksModSystem : ModSystem
         }
 
 
-        if (packet.IsFavorite)
-        {
-            favoritesAttr.SetBool(packet.Code, packet.IsFavorite);
-        }
-        else
-        {
-            favoritesAttr.RemoveAttribute(packet.Code);
-        }
+        if (packet.IsFavorite) favoritesAttr.SetBool(packet.Code, packet.IsFavorite);
+        else favoritesAttr.RemoveAttribute(packet.Code);
 
         tree.MarkPathDirty(FavoritesManager.FavoritesKey);
     }
@@ -233,13 +232,11 @@ public class StorageTweaksModSystem : ModSystem
         {
             if (destSlot.Empty) continue;
             if (FavoritesManager.IsFavorite(fromPlayer, destSlot.Itemstack)) continue;
+
             existingCodes.Add(destSlot.Itemstack.Collectible.Code.ToString());
         }
 
-        if (existingCodes.Count == 0)
-        {
-            return;
-        }
+        if (existingCodes.Count == 0) return;
 
         ProcessInventorySlots(playerInv, destInventory, existingCodes, fromPlayer);
         ProcessInventorySlots(playerHotbar, destInventory, existingCodes, fromPlayer);
@@ -266,8 +263,10 @@ public class StorageTweaksModSystem : ModSystem
                     slot.StackSize);
                 var suitedSlot = destInventory.GetBestSuitedSlot(slot, op, ignoredSlots);
                 if (suitedSlot.slot == null || suitedSlot.weight == 0) break;
+
                 slot.TryPutInto(suitedSlot.slot, ref op);
                 if (slot.Empty) break;
+
                 ignoredSlots.Add(suitedSlot.slot);
             }
         }
@@ -278,14 +277,8 @@ public class StorageTweaksModSystem : ModSystem
         // we should probably add checks if the player is allowed to access the inventory
 
         List<ItemSlot> slots;
-        if (inventory is InventoryPlayerBackpacks backpacks)
-        {
-            slots = backpacks.bagInv.ToList();
-        }
-        else
-        {
-            slots = inventory.ToList();
-        }
+        if (inventory is InventoryPlayerBackpacks backpacks) slots = backpacks.bagInv.ToList();
+        else slots = inventory.ToList();
 
         // Excludes specialized bag slots from sorting,
         // for example, Quivers And Sheaths item slots
@@ -348,15 +341,13 @@ public class StorageTweaksModSystem : ModSystem
                     stack.StackSize);
                 var weightedSlot = inventory.GetBestSuitedSlot(sourceSlot,
                     null, skippedSlots);
-                if (weightedSlot.slot == null)
-                {
-                    throw new Exception("Failed to find a target slot to store stack");
-                }
+                if (weightedSlot.slot == null) throw new Exception("Failed to find a target slot to store stack");
 
                 skippedSlots.Add(weightedSlot.slot);
                 if (IsExcludedSlot(weightedSlot.slot))
                 {
-                    world.Logger.Warning("Got best suited slot that is excluded: {0}", weightedSlot.slot.GetType().Name);
+                    world.Logger.Warning("Got best suited slot that is excluded: {0}",
+                        weightedSlot.slot.GetType().Name);
                     continue;
                 }
 
@@ -365,12 +356,8 @@ public class StorageTweaksModSystem : ModSystem
         }
 
         foreach (var slot in slots)
-        {
             if (slot.Empty)
-            {
                 slot.MarkDirty();
-            }
-        }
     }
 
     private static bool IsExcludedSlot(ItemSlot slot)
@@ -384,6 +371,7 @@ public class StorageTweaksModSystem : ModSystem
         {
             _config = api.LoadModConfig<StorageTweaksClientConfig>("storagetweaks.json");
             if (_config != null) return;
+
             _config = new StorageTweaksClientConfig();
             api.StoreModConfig(_config, "storagetweaks.json");
         }
