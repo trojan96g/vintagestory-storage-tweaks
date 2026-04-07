@@ -68,12 +68,6 @@ public class FavoritesManager
         _networkChannel.SendPacket(new UpdateFavoritesPacket { Code = key, IsFavorite = newState });
     }
 
-    public int GetFavoriteCount()
-    {
-        var tree = _capi.World.Player?.Entity?.WatchedAttributes;
-        return tree?.GetTreeAttribute(FavoritesKey)?.Count ?? 0;
-    }
-
     private static string GetItemKey(ItemStack stack)
     {
         return stack.Collectible.Code.ToString();

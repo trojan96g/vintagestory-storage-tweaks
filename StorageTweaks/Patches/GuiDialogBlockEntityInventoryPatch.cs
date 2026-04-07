@@ -1,12 +1,12 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable UnusedType.Global
 
-using HarmonyLib;
-using Vintagestory.API.Client;
 using System;
 using System.Linq;
+using HarmonyLib;
+using Vintagestory.API.Client;
 
-namespace StorageTweaks;
+namespace StorageTweaks.Patches;
 
 [HarmonyPatch(typeof(GuiComposerHelpers), "AddDialogTitleBar")]
 public class GuiDialogBlockEntityInventoryPatch

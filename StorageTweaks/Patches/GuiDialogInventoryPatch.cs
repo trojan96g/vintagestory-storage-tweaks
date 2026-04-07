@@ -5,7 +5,7 @@
 using HarmonyLib;
 using Vintagestory.Client.NoObf;
 
-namespace StorageTweaks;
+namespace StorageTweaks.Patches;
 
 [HarmonyPatch(typeof(GuiDialogInventory), "OnGuiClosed")]
 public class GuiDialogInventoryPatch

@@ -12,7 +12,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.Common;
 
-namespace StorageTweaks;
+namespace StorageTweaks.Patches;
 
 /// <summary>
 /// Slot with item(s) in the favorite list
@@ -95,7 +95,6 @@ public class GuiElementItemSlotGridPatch
         var favoritesManager = FavoritesManager.Get();
         if (HideFavorites && !(favoritesManager?.IsFavoriteModeActive ?? HideFavorites)) return;
         if (favoritesManager == null) return;
-        if (favoritesManager.GetFavoriteCount() == 0) return;
 
         var slotIndex = 0;
         foreach (KeyValuePair<int, ItemSlot> renderedSlot in __instance.renderedSlots)

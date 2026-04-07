@@ -8,6 +8,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using ProtoBuf;
+using StorageTweaks.Patches;
 using Vintagestory.API.Datastructures;
 using Vintagestory.Common;
 

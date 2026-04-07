@@ -7,7 +7,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.GameContent;
 
-namespace StorageTweaks;
+namespace StorageTweaks.Patches;
 
 public static class PatchUtils
 {

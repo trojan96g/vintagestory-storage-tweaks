@@ -2,14 +2,13 @@
 // ReSharper disable UnusedType.Global
 // ReSharper disable ClassNeverInstantiated.Global
 
-using System;
 using HarmonyLib;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 
-namespace StorageTweaks;
+namespace StorageTweaks.Patches;
 
 [HarmonyPatch(typeof(GuiComposerHelpers), "AddDialogTitleBar")]
 public class GuiDialogBackpackInventoryPatch
