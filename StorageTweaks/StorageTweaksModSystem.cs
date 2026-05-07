@@ -52,7 +52,9 @@ public class StorageTweaksModSystem : ModSystem
             // for overhaullib before 1.22, Quivers And Sheaths and Backpacks mod use this slot type before 1.22
             "ItemSlotBagContentWithWildcardMatch",
             // for https://mods.vintagestory.at/playerinventorylib used by backpacks mod in 1.22+
-            "BackpackSlot"
+            "BackpackSlot",
+            // for https://mods.vintagestory.at/playerinventorylib without the Backpacks mod
+            "VanillaBagContentSlot"
         ];
 
     private static StorageTweaksClientConfig _config = new();

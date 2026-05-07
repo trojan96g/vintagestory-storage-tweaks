@@ -13,7 +13,7 @@
     "Client-1.22": {
       "commandName": "Executable",
       "executablePath": "dotnet",
-      "commandLineArgs": "\"$(VINTAGE_STORY)_1.22/Vintagestory.dll\" --tracelog --addModPath \"$(ProjectDir)/bin/$(Configuration)/Mods\" --addOrigin \"$(ProjectDir)/assets\"",
+      "commandLineArgs": "\"$(VINTAGE_STORY)_1.22/Vintagestory.dll\" --tracelog --addModPath \"$(ProjectDir)/bin/$(Configuration)/Mods\" --addOrigin \"$(ProjectDir)/assets\" --dataPath $(VINTAGE_STORY)_1.22/data",
       "workingDirectory": "$(VINTAGE_STORY)",
       "environmentVariables": {
         "CAIRO_DEBUG_DISPOSE": "1",
