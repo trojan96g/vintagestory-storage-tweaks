@@ -10,6 +10,16 @@
         "VAO_DEBUG_DISPOSE": "1"
       }
     },
+    "Client-1.22": {
+      "commandName": "Executable",
+      "executablePath": "dotnet",
+      "commandLineArgs": "\"$(VINTAGE_STORY)_1.22/Vintagestory.dll\" --tracelog --addModPath \"$(ProjectDir)/bin/$(Configuration)/Mods\" --addOrigin \"$(ProjectDir)/assets\"",
+      "workingDirectory": "$(VINTAGE_STORY)",
+      "environmentVariables": {
+        "CAIRO_DEBUG_DISPOSE": "1",
+        "VAO_DEBUG_DISPOSE": "1"
+      }
+    },
     "Server": {
       "commandName": "Executable",
       "executablePath": "dotnet",

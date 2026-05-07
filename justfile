@@ -8,9 +8,21 @@ download-deps:
     rm overhaullib_$OVERHAULLIB_VER.zip
     cd -
 
-download-vs:
+download-vs-1_22:
     #!/usr/bin/env bash
     VS_DOWNLOAD_URL="https://cdn.vintagestory.at/gamefiles/stable/vs_client_linux-x64_1.22.2.tar.gz"
-    curl -o vs.tar.gz $VS_DOWNLOAD_URL
-    tar -xzf vs.tar.gz
+    curl -o vs_1.22.tar.gz $VS_DOWNLOAD_URL
+    if [[ -d "vintagestory_1.22" ]]; then
+      rm -r vintagestory_1.22 
+    fi
+    tar -xzf vs_1.22.tar.gz --one-top-level="vintagestory_1.22" --strip-components 1 
+
+download-vs-1_21:
+    #!/usr/bin/env bash
+    VS_DOWNLOAD_URL="https://cdn.vintagestory.at/gamefiles/stable/vs_client_linux-x64_1.21.6.tar.gz"
+    curl -o vs_1.21.tar.gz $VS_DOWNLOAD_URL
+    if [[ -d "vintagestory" ]]; then
+      rm -r vintagestory
+    fi
+    tar -xzf vs_1.21.tar.gz
     test -d vintagestory

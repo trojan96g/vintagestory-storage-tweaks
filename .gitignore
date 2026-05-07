@@ -9,4 +9,6 @@ StorageTweaks.sln.DotSettings.user
 /tmp
 /lib
 /vintagestory
+/vintagestory_*
 /vs.tar.gz
+/vs_*.tar.gz

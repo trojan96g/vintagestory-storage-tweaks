@@ -45,7 +45,7 @@ public class GuiDialogBackpackInventoryPatch
             capi,
             icon,
             () => true,
-            active => { FavoritesManager.Get()?.IsFavoriteModeActive = active; },
+            active => { FavoritesManager.Get()!.IsFavoriteModeActive = active; },
             bounds,
             ColorUtil.ColorFromRgba(247, 250, 72, 255),
             ColorUtil.ColorFromRgba(222, 225, 65, 255)

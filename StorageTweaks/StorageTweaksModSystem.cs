@@ -10,7 +10,6 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.Server;
-using Vintagestory.Common;
 
 namespace StorageTweaks;
 
@@ -58,10 +57,18 @@ public class StorageTweaksModSystem : ModSystem
     private ICoreClientAPI? _clientApi;
     private Harmony? _harmony;
     private ICoreServerAPI? _serverApi;
+    private static ILogger? _logger;
+    
+    public static ILogger Logger() => _logger!;
 
     public override bool ShouldLoad(EnumAppSide forSide)
     {
         return true;
+    }
+
+    public override void Start(ICoreAPI api)
+    {
+        _logger = api.Logger;
     }
 
     public override void StartClientSide(ICoreClientAPI api)
@@ -245,11 +252,8 @@ public class StorageTweaksModSystem : ModSystem
     private static void ProcessInventorySlots(IInventory sourceInventory, IInventory destInventory,
         HashSet<string> existingCodes, IServerPlayer fromPlayer)
     {
-        // skip backup slots
-        var skipFirstN = sourceInventory is InventoryPlayerBackpacks backpacks ? backpacks.bagSlots.Length : 0;
-
         List<ItemSlot> ignoredSlots = [];
-        foreach (var slot in sourceInventory.Skip(skipFirstN))
+        foreach (var slot in sourceInventory)
         {
             if (slot.Empty) continue;
             if (!existingCodes.Contains(slot.Itemstack.Collectible.Code.ToString())) continue;
@@ -276,9 +280,7 @@ public class StorageTweaksModSystem : ModSystem
     {
         // we should probably add checks if the player is allowed to access the inventory
 
-        List<ItemSlot> slots;
-        if (inventory is InventoryPlayerBackpacks backpacks) slots = backpacks.bagInv.ToList();
-        else slots = inventory.ToList();
+        var slots = Util.GetInventorySlots(inventory);
 
         // Excludes specialized bag slots from sorting,
         // for example, Quivers And Sheaths item slots
@@ -391,6 +393,6 @@ public class StorageTweaksModSystem : ModSystem
     {
         _harmony?.UnpatchAll("storagetweaks");
         _clientApi?.StoreModConfig(GetClientConfig(), "storagetweaks.json");
-        _serverApi?.Event.PlayerJoin -= OnPlayerJoin;
+        if (_serverApi != null) _serverApi.Event.PlayerJoin -= OnPlayerJoin;
     }
 }
