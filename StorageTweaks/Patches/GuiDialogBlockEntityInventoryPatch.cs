@@ -4,34 +4,40 @@
 using System;
 using System.Linq;
 using HarmonyLib;
+using StorageTweaks.Gui;
 using Vintagestory.API.Client;
-using Vintagestory.API.Config;
+// ReSharper disable UnusedParameter.Global
 
 namespace StorageTweaks.Patches;
 
-[HarmonyPatch(typeof(GuiComposerHelpers), "AddDialogTitleBar")]
-public class GuiDialogBlockEntityInventoryPatch
+[HarmonyPatch(typeof(GuiDialogBlockEntityInventory), "OnGuiOpened")]
+public static class GuiDialogBlockEntityInventoryPatch
 {
+    private static ContainerActionButtons? actionButtons;
+
     private static readonly string[] DialogNamePrefixes = ["blockentityinventory", "attachedcontainer"];
-
+    
     [HarmonyPostfix]
-    public static void Postfix(GuiComposer composer)
+    // ReSharper disable once InconsistentNaming
+    public static void Postfix(GuiDialogBlockEntityInventory __instance)
     {
-        var capi = composer.Api;
-        if (capi == null) return;
+        var composer = __instance.SingleComposer;
+        actionButtons ??= new ContainerActionButtons(composer.Api);
 
-        if (composer.DialogName == null) return;
-
-        if (!DialogNamePrefixes.Any(prefix => composer.DialogName.StartsWith(prefix, StringComparison.Ordinal))) return;
-
-        if (composer["storagetweaks-sort"] != null || composer["storagetweaks-unload"] != null)
+        if (composer.DialogName == null)
+        {
+            composer.Api.Logger.Warning(
+                "[StorageTweaks] GuiDialogBlockEntityInventory constructed without dialog name");
             return;
+        }
 
-        PatchUtils.AddButton(composer, "sort", -60,
-            inventory => PatchUtils.SendPacket(capi, new SortInventoryPacket { InventoryId = inventory.InventoryID }), Lang.Get("storagetweaks:compact-and-sort"));
+        if (!DialogNamePrefixes.Any(prefix => composer.DialogName.StartsWith(prefix, StringComparison.Ordinal)))
+        {
+            composer.Api.Logger.Warning("[StorageTweaks] {0} not in whitelist for block entity dialog names",
+                composer.DialogName);
+            return;
+        }
 
-        PatchUtils.AddButton(composer, "unload", -86,
-            inventory =>
-                PatchUtils.SendPacket(capi, new UnloadInventoryPacket { InventoryId = inventory.InventoryID }), Lang.Get("storagetweaks:quick-store"));
+        actionButtons.ComposeGui(composer);
     }
 }

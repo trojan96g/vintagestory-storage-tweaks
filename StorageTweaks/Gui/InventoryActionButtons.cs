@@ -13,7 +13,6 @@ public class InventoryActionButtons(ICoreClientAPI capi)
 
     public void ComposeGui(GuiComposer invComposer)
     {
-        RegisterIcons();
         invComposer.Composed = false;
         capi.Logger.Debug("[StorageTweaks] Adding sort button");
         PatchUtils.AddButton(invComposer, "sort", -60,
@@ -62,21 +61,21 @@ public class InventoryActionButtons(ICoreClientAPI capi)
     private void AddFavoritesHideToggle(GuiComposer composer)
     {
         var bounds = ElementBounds.Fixed(EnumDialogArea.RightTop, -138, 5, 24, 24);
-        var toggleBtn = new GuiElementToggleButton(capi, "inventory-favorites-hide", "",
+        var toggleBtn = new GuiElementToggleButton(capi, null, "",
             CairoFont.SmallButtonText(), on => GuiElementItemSlotGridPatch.HideFavorites = on, bounds, true);
         toggleBtn.On = GuiElementItemSlotGridPatch.HideFavorites;
-        composer.AddInteractiveElement(toggleBtn, "storagetweaks-hide-favorites").AddHoverText(
+        composer.AddInteractiveElement(toggleBtn, "storagetweaks-hide-favorites").AddDynamicCustomDraw(bounds,
+            (_, surface, _) =>
+            {
+                var iconAsset = new AssetLocation("storagetweaks", "textures/icons/favorites-hide.svg");
+                var icon = capi.Assets.TryGet(iconAsset);
+                var iconSize = (int)GuiElement.scaled(20.0);
+                var margin = (int)GuiElement.scaled(2);
+                if (icon != null)
+                    capi.Gui.DrawSvg(icon, surface, margin, margin, iconSize, iconSize, SvgButton.NormalColor);
+            }).AddHoverText(
             Lang.Get("storagetweaks:toggle-hide-favorites"), CairoFont.WhiteSmallText(), 250,
             bounds.FlatCopy()
         );
-    }
-
-    private void RegisterIcons()
-    {
-        if (!capi.Gui.Icons.CustomIcons.ContainsKey("inventory-favorites-hide"))
-        {
-            capi.Gui.Icons.CustomIcons.Add("inventory-favorites-hide",
-                capi.Gui.Icons.SvgIconSource(new AssetLocation("storagetweaks", "textures/icons/favorites-hide.svg")));
-        }
     }
 }
