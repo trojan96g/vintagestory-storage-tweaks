@@ -17,9 +17,9 @@ namespace StorageTweaks.Patches;
 /// </summary>
 public class FavoritedSlot
 {
-    private LoadedTexture? favoriteIconTexture;
+    private static LoadedTexture? favoriteIconTexture;
     private readonly ICoreClientAPI capi;
-    private readonly int favoriteSlotCornerColor = ColorUtil.ColorFromRgba(250, 230, 51, 180);
+    private static readonly int FavoriteSlotCornerColor = ColorUtil.ColorFromRgba(250, 230, 51, 180);
 
     private readonly ElementBounds bounds;
     private readonly float iconSize;
@@ -36,10 +36,10 @@ public class FavoritedSlot
         marginLeft = (float)GuiElement.scaled(2);
         marginTop = (float)GuiElement.scaled(2);
         iconSize = (float)GuiElement.scaled(10);
-        EnsureIconTexture((int)Math.Floor(iconSize));
+        EnsureIconTexture((int)Math.Floor(iconSize), capi);
         return;
 
-        void EnsureIconTexture(int size)
+        static void EnsureIconTexture(int size, ICoreClientAPI capi)
         {
             // if size hasn't changed, don't re-render
             if (favoriteIconTexture?.Width == size) return;
@@ -52,7 +52,7 @@ public class FavoritedSlot
             favoriteIconTexture = new LoadedTexture(capi);
             var surface = new ImageSurface(Format.Argb32, size, size);
             var ctx = new Context(surface);
-            capi.Gui.DrawSvg(favoriteIconAsset, surface, 0, 0, size, size, favoriteSlotCornerColor);
+            capi.Gui.DrawSvg(favoriteIconAsset, surface, 0, 0, size, size, FavoriteSlotCornerColor);
             capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref favoriteIconTexture);
             ctx.Dispose();
             surface.Dispose();

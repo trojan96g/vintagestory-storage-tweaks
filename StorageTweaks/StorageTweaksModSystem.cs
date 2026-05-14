@@ -229,11 +229,10 @@ public class StorageTweaksModSystem : ModSystem
     {
         // should probably add checks if the player is allowed to access the inventory
 
-        var logger = fromPlayer.Entity.World.Logger;
         var destInventory = fromPlayer.InventoryManager.GetInventory(packet.InventoryId);
         if (destInventory == null)
         {
-            logger.Debug(
+            Logger().Debug(
                 "[StorageTweaks] HandleUnloadInventory: Destination inventory not found");
             return;
         }
@@ -243,11 +242,10 @@ public class StorageTweaksModSystem : ModSystem
 
     public static void UnloadInventory(IServerPlayer fromPlayer, IInventory destInventory)
     {
-        var logger = fromPlayer.Entity.World.Logger;
         var playerInv = fromPlayer.InventoryManager.GetOwnInventory(GlobalConstants.backpackInvClassName);
         if (playerInv == null)
         {
-            logger.Debug(
+            Logger().Debug(
                 "[StorageTweaks] HandleUnloadInventory: Player backpack inventory not found");
             return;
         }
@@ -255,7 +253,7 @@ public class StorageTweaksModSystem : ModSystem
         var playerHotbar = fromPlayer.InventoryManager.GetOwnInventory(GlobalConstants.hotBarInvClassName);
         if (playerHotbar == null)
         {
-            logger.Debug(
+            Logger().Debug(
                 "[StorageTweaks] HandleUnloadInventory: Player hotbar inventory not found");
             return;
         }
