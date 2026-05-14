@@ -41,6 +41,39 @@ public class GuiDialogInventoryPatch
         modSystem.InventoryActionButtons!.ComposeGui(composer);
     }
 
+    /// <summary>
+    /// A fallback patch in case AddDialogTitleBar doesn't get run. For some reason with the
+    /// Improved Handbook Recipe Helper mod my AddDialogTitleBar never gets called.
+    /// But as soon as I add a patch for ComposeSurvivalInvDialog it does get run meaning I would be adding the buttons
+    /// twice accept that I have a check to prevent it. I don't understand all this patching stuff, but I'll keep this
+    /// one as a fallback just in case AddDialogTitleBar doesn't get run. However, this postfix patch will never run
+    /// with the Backpacks mod since it uses GuiDialogSurvivalInventory from the playerinventorylib mod. As far as I know
+    /// the handbook recipe helper mod does not patch anything in playerinventorylib meaning AddDialogTitleBar patch
+    /// is uneffected and should work just fine with playerinventorylib/Backpacks mod.
+    /// </summary>
+    /// <param name="__instance"></param>
+    [HarmonyPatch(typeof(GuiDialogInventory), "ComposeSurvivalInvDialog")]
+    [HarmonyPostfix]
+    // ReSharper disable once InconsistentNaming
+    public static void ComposeSurvivalInvDialog(GuiDialogInventory __instance)
+    {
+        var capi = GetApi(__instance);
+        capi.Logger.Debug("[StorageTweaks] ComposeSurvivalInvDialog: {0}", __instance.GetType().Name);
+        var composer = GetGuiComposer(__instance);
+        if (composer == null) {
+            capi.Logger.Warning("[StorageTweaks] Failed to find GuiComposer in ComposeSurvivalInvDialog");
+            return;
+        }
+
+        if (composer["storagetweaks-sort"] != null) return;
+        var modSystem = capi.ModLoader.GetModSystem<StorageTweaksModSystem>();
+        if (modSystem == null) {
+            capi.Logger.Warning("[StorageTweaks] Failed to get StorageTweaksModSystem in ComposeSurvivalInvDialog");
+            return;
+        }
+        modSystem.InventoryActionButtons!.ComposeGui(composer);
+    }
+
     [HarmonyPatch(typeof(GuiDialog), "OnGuiClosed")]
     [HarmonyPostfix]
     // ReSharper disable once InconsistentNaming
@@ -57,5 +90,11 @@ public class GuiDialogInventoryPatch
     {
         var field = dialog.GetType().GetField("capi", BindingFlags.NonPublic | BindingFlags.Instance)!;
         return (ICoreClientAPI)field.GetValue(dialog)!;
+    }
+
+    private static GuiComposer? GetGuiComposer(GuiDialogInventory dialog)
+    {
+        var field = dialog.GetType().GetField("survivalInvDialog", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        return (GuiComposer?)field.GetValue(dialog);
     }
 }
