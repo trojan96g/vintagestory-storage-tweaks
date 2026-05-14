@@ -7,9 +7,21 @@ using Vintagestory.API.MathTools;
 
 namespace StorageTweaks.Gui;
 
-public class InventoryActionButtons(ICoreClientAPI capi)
+public class InventoryActionButtons
 {
     private SvgToggleButton? favoriteToggleButton;
+    private readonly StorageTweaksModSystem? modSystem;
+    private readonly ICoreClientAPI capi;
+
+    public InventoryActionButtons(ICoreClientAPI capi)
+    {
+        this.capi = capi;
+        modSystem = capi.ModLoader.GetModSystem<StorageTweaksModSystem>();
+        if (modSystem == null)
+        {
+            capi.Logger.Error("[StorageTweaks] StorageTweaksModSystem not found in InventoryActionButtons");
+        }
+    }
 
     public void ComposeGui(GuiComposer invComposer)
     {
@@ -42,12 +54,12 @@ public class InventoryActionButtons(ICoreClientAPI capi)
             capi,
             icon,
             () => true,
-            active => { FavoritesManager.Get()!.IsFavoriteModeActive = active; },
+            active => { modSystem!.FavoritesManager!.IsFavoriteModeActive = active; },
             bounds,
             ColorUtil.ColorFromRgba(247, 250, 72, 255),
             ColorUtil.ColorFromRgba(222, 225, 65, 255)
         );
-        favoriteToggleButton.IsActive = FavoritesManager.Get()?.IsFavoriteModeActive ?? false;
+        favoriteToggleButton.IsActive = modSystem?.FavoritesManager?.IsFavoriteModeActive ?? false;
 
         composer.AddInteractiveElement(favoriteToggleButton, "storagetweaks-favorite")
             .AddHoverText(

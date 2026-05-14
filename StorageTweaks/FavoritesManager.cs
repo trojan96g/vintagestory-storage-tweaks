@@ -7,27 +7,16 @@ namespace StorageTweaks;
 public class FavoritesManager
 {
     public const string FavoritesKey = "storageTweaksFavorites";
-    private static FavoritesManager? instance;
     private readonly ICoreClientAPI capi;
     private readonly IClientNetworkChannel networkChannel;
 
-    private FavoritesManager(ICoreClientAPI capi)
+    public FavoritesManager(ICoreClientAPI capi)
     {
         this.capi = capi;
         networkChannel = capi.Network.GetChannel("storagetweaks");
     }
 
     public bool IsFavoriteModeActive { get; set; }
-
-    public static void Initialize(ICoreClientAPI capi)
-    {
-        instance = new FavoritesManager(capi);
-    }
-
-    public static FavoritesManager? Get()
-    {
-        return instance;
-    }
 
     public bool IsFavorite(ItemStack stack)
     {

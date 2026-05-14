@@ -17,9 +17,9 @@ namespace StorageTweaks.Patches;
 /// </summary>
 public class FavoritedSlot
 {
-    private static LoadedTexture? favoriteIconTexture;
-    private static ICoreClientAPI? capi;
-    private static readonly int FavoriteSlotCornerColor = ColorUtil.ColorFromRgba(250, 230, 51, 180);
+    private LoadedTexture? favoriteIconTexture;
+    private readonly ICoreClientAPI capi;
+    private readonly int favoriteSlotCornerColor = ColorUtil.ColorFromRgba(250, 230, 51, 180);
 
     private readonly ElementBounds bounds;
     private readonly float iconSize;
@@ -29,8 +29,9 @@ public class FavoritedSlot
     /// <summary>
     ///     Slot with item(s) in the favorite list
     /// </summary>
-    public FavoritedSlot(ElementBounds bounds)
+    public FavoritedSlot(ElementBounds bounds, ICoreClientAPI api)
     {
+        capi = api;
         this.bounds = bounds;
         marginLeft = (float)GuiElement.scaled(2);
         marginTop = (float)GuiElement.scaled(2);
@@ -38,9 +39,8 @@ public class FavoritedSlot
         EnsureIconTexture((int)Math.Floor(iconSize));
         return;
 
-        static void EnsureIconTexture(int size)
+        void EnsureIconTexture(int size)
         {
-            if (capi == null) return;
             // if size hasn't changed, don't re-render
             if (favoriteIconTexture?.Width == size) return;
 
@@ -52,7 +52,7 @@ public class FavoritedSlot
             favoriteIconTexture = new LoadedTexture(capi);
             var surface = new ImageSurface(Format.Argb32, size, size);
             var ctx = new Context(surface);
-            capi.Gui.DrawSvg(favoriteIconAsset, surface, 0, 0, size, size, FavoriteSlotCornerColor);
+            capi.Gui.DrawSvg(favoriteIconAsset, surface, 0, 0, size, size, favoriteSlotCornerColor);
             capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref favoriteIconTexture);
             ctx.Dispose();
             surface.Dispose();
@@ -61,17 +61,12 @@ public class FavoritedSlot
 
     public void Draw()
     {
-        if (capi == null || favoriteIconTexture == null) return;
+        if (favoriteIconTexture == null) return;
 
         var x = (float)Math.Round(bounds.renderX + marginLeft, MidpointRounding.AwayFromZero);
         var y = (float)Math.Round(bounds.renderY + marginTop, MidpointRounding.AwayFromZero);
         capi.Render.Render2DTexture(favoriteIconTexture.TextureId, x, y, (float)Math.Floor(iconSize),
             (float)Math.Floor(iconSize));
-    }
-
-    public static void SetApi(ICoreClientAPI api)
-    {
-        capi = api;
     }
 }
 
@@ -98,7 +93,8 @@ public class GuiElementItemSlotGridPatch
         // ReSharper disable once UnusedParameter.Global
         float deltaTime)
     {
-        var favoritesManager = FavoritesManager.Get();
+        var capi = GetApi(__instance);
+        var favoritesManager = GetFavoritesManager(__instance, "PostfixRenderInteractiveElements");
         if (HideFavorites && !(favoritesManager?.IsFavoriteModeActive ?? HideFavorites)) return;
         if (favoritesManager == null) return;
 
@@ -115,7 +111,7 @@ public class GuiElementItemSlotGridPatch
             if (value.Itemstack != null && favoritesManager.IsFavorite(value.Itemstack))
             {
                 var elementBounds = __instance.SlotBounds[slotIndex];
-                new FavoritedSlot(elementBounds).Draw();
+                new FavoritedSlot(elementBounds, capi).Draw();
             }
 
             slotIndex++;
@@ -135,7 +131,7 @@ public class GuiElementItemSlotGridPatch
         bool ctrlPressed,
         bool altPressed)
     {
-        var favoritesManager = FavoritesManager.Get();
+        var favoritesManager = GetFavoritesManager(__instance, "PrefixSlotClick");
         if (favoritesManager is not { IsFavoriteModeActive: true }) return true;
 
         var inventory = (IInventory?)InventoryField.GetValue(__instance);
@@ -150,5 +146,29 @@ public class GuiElementItemSlotGridPatch
         api.Gui.PlaySound("tick");
 
         return false;
+    }
+
+    private static ICoreClientAPI GetApi(GuiElementItemSlotGridBase instance)
+    {
+        var field = instance.GetType().GetField("api", BindingFlags.NonPublic | BindingFlags.Instance);
+        return (ICoreClientAPI)field!.GetValue(instance)!;
+    }
+
+    private static FavoritesManager? GetFavoritesManager(GuiElementItemSlotGridBase instance, string context)
+    {
+        var capi = GetApi(instance); 
+        var modSystem = capi.ModLoader.GetModSystem<StorageTweaksModSystem>();
+        if (modSystem == null)
+        {
+            capi.Logger.Warning("[StorageTweaks] Failed to get StorageTweaksModSystem in GuiElementItemSlotGridPatch::{0}", context);
+            return null;
+        }
+
+        var favoritesManager = modSystem.FavoritesManager;
+        if (favoritesManager == null)
+        {
+            capi.Logger.Warning("[StorageTweaks] Failed to get favorites manager in  GuiElementItemSlotGridPatch::{0}", context);
+        }
+        return favoritesManager;
     }
 }

@@ -51,6 +51,7 @@ public class StorageTweaksModSystem : ModSystem
 {
     public InventoryActionButtons? InventoryActionButtons;
     public ContainerActionButtons? ContainerActionButtons;
+    public FavoritesManager? FavoritesManager;
     private static readonly string[] SlotTypes =
     [
         "ItemSlotSurvival",
@@ -96,8 +97,7 @@ public class StorageTweaksModSystem : ModSystem
             .RegisterMessageType<UpdateFavoritesPacket>()
             .RegisterMessageType<QuickStoreNearbyContainersPacket>();
 
-        FavoritesManager.Initialize(api);
-        FavoritedSlot.SetApi(api);
+        FavoritesManager = new FavoritesManager(capi);
         InventoryActionButtons = new InventoryActionButtons(capi);
         ContainerActionButtons = new ContainerActionButtons(capi);
         harmony = new Harmony("storagetweaks");

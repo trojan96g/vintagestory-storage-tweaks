@@ -4,7 +4,6 @@
 
 using System.Reflection;
 using HarmonyLib;
-using StorageTweaks.Gui;
 using Vintagestory.API.Client;
 using Vintagestory.Client.NoObf;
 
@@ -18,8 +17,7 @@ public class GuiDialogInventoryPatch
     // ReSharper disable once InconsistentNaming
     public static void ComposeSurvivalInvDialog(GuiDialogInventory __instance)
     {
-        var field = __instance.GetType().GetField("survivalInvDialog", BindingFlags.NonPublic | BindingFlags.Instance)!;
-        var composer = (GuiComposer)field.GetValue(__instance)!;
+        var composer =  GetComposer(__instance);
         var capi = composer.Api!;
         capi.Logger.Debug("[StorageTweaks] Composing inventory action buttons.");
         
@@ -36,8 +34,20 @@ public class GuiDialogInventoryPatch
     
     [HarmonyPatch(typeof(GuiDialogInventory), "OnGuiClosed")]
     [HarmonyPostfix]
-    public static void OnGuiClosed()
+    // ReSharper disable once InconsistentNaming
+    public static void OnGuiClosed(GuiDialogInventory __instance)
     {
-        FavoritesManager.Get()!.IsFavoriteModeActive = false;
+        var composer =  GetComposer(__instance);
+        var modSystem = composer.Api.ModLoader.GetModSystem<StorageTweaksModSystem>();
+        if (modSystem.FavoritesManager == null) return;
+        modSystem.FavoritesManager.IsFavoriteModeActive = false;
+    }
+
+    private static GuiComposer GetComposer(GuiDialogInventory inventoryDialog)
+    {
+        
+        var field = inventoryDialog.GetType().GetField("survivalInvDialog", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var composer = (GuiComposer)field.GetValue(inventoryDialog)!;
+        return composer;
     }
 }
