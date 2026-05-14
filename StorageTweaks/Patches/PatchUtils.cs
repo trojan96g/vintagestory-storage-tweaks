@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
+using StorageTweaks.Gui;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;

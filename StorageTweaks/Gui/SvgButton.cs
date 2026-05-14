@@ -4,7 +4,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace StorageTweaks;
+namespace StorageTweaks.Gui;
 
 public class SvgButton(
     ICoreClientAPI capi,
@@ -15,9 +15,9 @@ public class SvgButton(
 {
     public static readonly int NormalColor = ColorUtil.ColorFromRgba(233, 221, 206, 255);
     public static readonly int HoverColor = ColorUtil.ColorFromRgba(0, 221, 0, 127);
-    private LoadedTexture _hoverTexture = new(capi);
-    private LoadedTexture _normalTexture = new(capi);
-    private LoadedTexture _shadowTexture = new(capi);
+    private LoadedTexture hoverTexture = new(capi);
+    private LoadedTexture normalTexture = new(capi);
+    private LoadedTexture shadowTexture = new(capi);
 
     public override void ComposeElements(Context ctxStatic, ImageSurface surface)
     {
@@ -26,15 +26,15 @@ public class SvgButton(
         var iconSize = (int)Bounds.InnerWidth;
 
         var shadowSurface = DrawShadow(iconSize);
-        api.Gui.LoadOrUpdateCairoTexture(shadowSurface, true, ref _shadowTexture);
+        api.Gui.LoadOrUpdateCairoTexture(shadowSurface, true, ref shadowTexture);
         shadowSurface.Dispose();
 
         var normalSurface = DrawNormalTexture(iconSize);
-        api.Gui.LoadOrUpdateCairoTexture(normalSurface, true, ref _normalTexture);
+        api.Gui.LoadOrUpdateCairoTexture(normalSurface, true, ref normalTexture);
         normalSurface.Dispose();
 
         var hoverSurface = DrawHoverTexture(iconSize);
-        api.Gui.LoadOrUpdateCairoTexture(hoverSurface, true, ref _hoverTexture);
+        api.Gui.LoadOrUpdateCairoTexture(hoverSurface, true, ref hoverTexture);
         hoverSurface.Dispose();
     }
 
@@ -78,13 +78,13 @@ public class SvgButton(
 
         var mouseOver = Bounds.PointInside(api.Input.MouseX, api.Input.MouseY);
 
-        api.Render.Render2DTexture(_shadowTexture.TextureId, (float)Bounds.absX, (float)Bounds.absY,
+        api.Render.Render2DTexture(shadowTexture.TextureId, (float)Bounds.absX, (float)Bounds.absY,
             (float)Bounds.InnerWidth, (float)Bounds.InnerHeight);
-        api.Render.Render2DTexture(_normalTexture.TextureId, (float)Bounds.absX, (float)Bounds.absY,
+        api.Render.Render2DTexture(normalTexture.TextureId, (float)Bounds.absX, (float)Bounds.absY,
             (float)Bounds.InnerWidth, (float)Bounds.InnerHeight);
 
         if (mouseOver)
-            api.Render.Render2DTexture(_hoverTexture.TextureId, (float)Bounds.absX, (float)Bounds.absY,
+            api.Render.Render2DTexture(hoverTexture.TextureId, (float)Bounds.absX, (float)Bounds.absY,
                 (float)Bounds.InnerWidth, (float)Bounds.InnerHeight);
     }
 
@@ -99,9 +99,9 @@ public class SvgButton(
     public override void Dispose()
     {
         base.Dispose();
-        _shadowTexture.Dispose();
-        _normalTexture.Dispose();
-        _hoverTexture.Dispose();
+        shadowTexture.Dispose();
+        normalTexture.Dispose();
+        hoverTexture.Dispose();
         GC.SuppressFinalize(this);
     }
 }

@@ -17,43 +17,43 @@ namespace StorageTweaks.Patches;
 /// </summary>
 public class FavoritedSlot
 {
-    private static LoadedTexture? _favoriteIconTexture;
-    private static ICoreClientAPI? _capi;
+    private static LoadedTexture? favoriteIconTexture;
+    private static ICoreClientAPI? capi;
     private static readonly int FavoriteSlotCornerColor = ColorUtil.ColorFromRgba(250, 230, 51, 180);
 
-    private readonly ElementBounds _bounds;
-    private readonly float _iconSize;
-    private readonly float _marginLeft;
-    private readonly float _marginTop;
+    private readonly ElementBounds bounds;
+    private readonly float iconSize;
+    private readonly float marginLeft;
+    private readonly float marginTop;
 
     /// <summary>
     ///     Slot with item(s) in the favorite list
     /// </summary>
     public FavoritedSlot(ElementBounds bounds)
     {
-        _bounds = bounds;
-        _marginLeft = (float)GuiElement.scaled(2);
-        _marginTop = (float)GuiElement.scaled(2);
-        _iconSize = (float)GuiElement.scaled(10);
-        EnsureIconTexture((int)Math.Floor(_iconSize));
+        this.bounds = bounds;
+        marginLeft = (float)GuiElement.scaled(2);
+        marginTop = (float)GuiElement.scaled(2);
+        iconSize = (float)GuiElement.scaled(10);
+        EnsureIconTexture((int)Math.Floor(iconSize));
         return;
 
         static void EnsureIconTexture(int size)
         {
-            if (_capi == null) return;
+            if (capi == null) return;
             // if size hasn't changed, don't re-render
-            if (_favoriteIconTexture?.Width == size) return;
+            if (favoriteIconTexture?.Width == size) return;
 
             var favoriteIconAsset =
-                _capi.Assets.TryGet(new AssetLocation("storagetweaks", "textures/icons/favorite-slot-corner.svg"));
+                capi.Assets.TryGet(new AssetLocation("storagetweaks", "textures/icons/favorite-slot-corner.svg"));
             if (favoriteIconAsset == null) return;
 
-            _favoriteIconTexture?.Dispose();
-            _favoriteIconTexture = new LoadedTexture(_capi);
+            favoriteIconTexture?.Dispose();
+            favoriteIconTexture = new LoadedTexture(capi);
             var surface = new ImageSurface(Format.Argb32, size, size);
             var ctx = new Context(surface);
-            _capi.Gui.DrawSvg(favoriteIconAsset, surface, 0, 0, size, size, FavoriteSlotCornerColor);
-            _capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref _favoriteIconTexture);
+            capi.Gui.DrawSvg(favoriteIconAsset, surface, 0, 0, size, size, FavoriteSlotCornerColor);
+            capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref favoriteIconTexture);
             ctx.Dispose();
             surface.Dispose();
         }
@@ -61,17 +61,17 @@ public class FavoritedSlot
 
     public void Draw()
     {
-        if (_capi == null || _favoriteIconTexture == null) return;
+        if (capi == null || favoriteIconTexture == null) return;
 
-        var x = (float)Math.Round(_bounds.renderX + _marginLeft, MidpointRounding.AwayFromZero);
-        var y = (float)Math.Round(_bounds.renderY + _marginTop, MidpointRounding.AwayFromZero);
-        _capi.Render.Render2DTexture(_favoriteIconTexture.TextureId, x, y, (float)Math.Floor(_iconSize),
-            (float)Math.Floor(_iconSize));
+        var x = (float)Math.Round(bounds.renderX + marginLeft, MidpointRounding.AwayFromZero);
+        var y = (float)Math.Round(bounds.renderY + marginTop, MidpointRounding.AwayFromZero);
+        capi.Render.Render2DTexture(favoriteIconTexture.TextureId, x, y, (float)Math.Floor(iconSize),
+            (float)Math.Floor(iconSize));
     }
 
     public static void SetApi(ICoreClientAPI api)
     {
-        _capi = api;
+        capi = api;
     }
 }
 

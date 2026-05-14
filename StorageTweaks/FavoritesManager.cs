@@ -8,12 +8,12 @@ public class FavoritesManager
 {
     public const string FavoritesKey = "storageTweaksFavorites";
     private static FavoritesManager? _instance;
-    private readonly ICoreClientAPI _capi;
+    private readonly ICoreClientAPI capi;
     private readonly IClientNetworkChannel _networkChannel;
 
     private FavoritesManager(ICoreClientAPI capi)
     {
-        _capi = capi;
+        this.capi = capi;
         _networkChannel = capi.Network.GetChannel("storagetweaks");
     }
 
@@ -31,7 +31,7 @@ public class FavoritesManager
 
     public bool IsFavorite(ItemStack stack)
     {
-        var tree = _capi.World.Player?.Entity?.WatchedAttributes;
+        var tree = capi.World.Player?.Entity?.WatchedAttributes;
         if (tree == null || stack.Collectible?.Code == null) return false;
 
         var favoritesAttr = tree.GetTreeAttribute(FavoritesKey);
@@ -45,7 +45,7 @@ public class FavoritesManager
         var key = GetItemKey(stack);
         var newState = !IsFavorite(stack);
 
-        var tree = _capi.World.Player?.Entity?.WatchedAttributes;
+        var tree = capi.World.Player?.Entity?.WatchedAttributes;
         if (tree != null)
         {
             var favoritesAttr = tree.GetTreeAttribute(FavoritesKey);

@@ -49,29 +49,29 @@ public class StorageTweaksClientConfig
 public class StorageTweaksModSystem : ModSystem
 {
     private static readonly string[] SlotTypes =
-        [
-            "ItemSlotSurvival",
-            "ItemSlotBagContent",
-            // for overhaullib before 1.22, Quivers And Sheaths and Backpacks mod use this slot type before 1.22
-            "ItemSlotBagContentWithWildcardMatch",
-            // for https://mods.vintagestory.at/playerinventorylib used by backpacks mod in 1.22+
-            "BackpackSlot",
-            // for https://mods.vintagestory.at/playerinventorylib without the Backpacks mod
-            "VanillaBagContentSlot"
-        ];
+    [
+        "ItemSlotSurvival",
+        "ItemSlotBagContent",
+        // for overhaullib before 1.22, Quivers And Sheaths and Backpacks mod use this slot type before 1.22
+        "ItemSlotBagContentWithWildcardMatch",
+        // for https://mods.vintagestory.at/playerinventorylib used by backpacks mod in 1.22+
+        "BackpackSlot",
+        // for https://mods.vintagestory.at/playerinventorylib without the Backpacks mod
+        "VanillaBagContentSlot"
+    ];
 
-    private static StorageTweaksClientConfig _config = new();
+    private static StorageTweaksClientConfig config = new();
 
     /// A list of quality foods and tools to exclude from automatic unloading
     // ReSharper disable once MemberCanBePrivate.Global
     public static readonly List<string> ToolAndFoodCodes = [];
 
-    private ICoreClientAPI? _clientApi;
-    private Harmony? _harmony;
-    private ICoreServerAPI? _serverApi;
-    private static ILogger? _logger;
-    
-    public static ILogger Logger() => _logger!;
+    private ICoreClientAPI? capi;
+    private Harmony? harmony;
+    private ICoreServerAPI? sapi;
+    private static ILogger? logger;
+
+    public static ILogger Logger() => logger!;
 
     public override bool ShouldLoad(EnumAppSide forSide)
     {
@@ -80,12 +80,12 @@ public class StorageTweaksModSystem : ModSystem
 
     public override void Start(ICoreAPI api)
     {
-        _logger = api.Logger;
+        logger = api.Logger;
     }
 
     public override void StartClientSide(ICoreClientAPI api)
     {
-        _clientApi = api;
+        capi = api;
         LoadClientConfig(api);
         api.Network.RegisterChannel("storagetweaks")
             .RegisterMessageType<SortInventoryPacket>()
@@ -95,13 +95,13 @@ public class StorageTweaksModSystem : ModSystem
 
         FavoritesManager.Initialize(api);
         FavoritedSlot.SetApi(api);
-        _harmony = new Harmony("storagetweaks");
-        _harmony.PatchAll();
+        harmony = new Harmony("storagetweaks");
+        harmony.PatchAll();
     }
 
     public override void StartServerSide(ICoreServerAPI api)
     {
-        _serverApi = api;
+        sapi = api;
         api.Network.RegisterChannel("storagetweaks")
             .RegisterMessageType<SortInventoryPacket>()
             .RegisterMessageType<UnloadInventoryPacket>()
@@ -110,7 +110,8 @@ public class StorageTweaksModSystem : ModSystem
             .SetMessageHandler<SortInventoryPacket>(HandleSortInventory)
             .SetMessageHandler<UnloadInventoryPacket>(HandleUnloadInventory)
             .SetMessageHandler<UpdateFavoritesPacket>(HandleUpdateFavorites)
-            .SetMessageHandler<QuickStoreNearbyContainersPacket>(QuickStoreNearbyContainerSystem.HandleQuickStoreNearbyContainers);
+            .SetMessageHandler<QuickStoreNearbyContainersPacket>(QuickStoreNearbyContainerSystem
+                .HandleQuickStoreNearbyContainers);
 
         PopulateToolAndFoodCodes(api);
 
@@ -392,28 +393,28 @@ public class StorageTweaksModSystem : ModSystem
     {
         try
         {
-            _config = api.LoadModConfig<StorageTweaksClientConfig>("storagetweaks.json");
-            if (_config != null) return;
+            config = api.LoadModConfig<StorageTweaksClientConfig>("storagetweaks.json");
+            if (config != null) return;
 
-            _config = new StorageTweaksClientConfig();
-            api.StoreModConfig(_config, "storagetweaks.json");
+            config = new StorageTweaksClientConfig();
+            api.StoreModConfig(config, "storagetweaks.json");
         }
         catch (Exception)
         {
-            _config = new StorageTweaksClientConfig();
-            api.StoreModConfig(_config, "storagetweaks.json");
+            config = new StorageTweaksClientConfig();
+            api.StoreModConfig(config, "storagetweaks.json");
         }
     }
 
     public static StorageTweaksClientConfig GetClientConfig()
     {
-        return _config;
+        return config;
     }
 
     public override void Dispose()
     {
-        _harmony?.UnpatchAll("storagetweaks");
-        _clientApi?.StoreModConfig(GetClientConfig(), "storagetweaks.json");
-        if (_serverApi != null) _serverApi.Event.PlayerJoin -= OnPlayerJoin;
+        harmony?.UnpatchAll("storagetweaks");
+        capi?.StoreModConfig(GetClientConfig(), "storagetweaks.json");
+        if (sapi != null) sapi.Event.PlayerJoin -= OnPlayerJoin;
     }
 }
