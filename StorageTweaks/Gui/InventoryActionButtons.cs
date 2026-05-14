@@ -1,4 +1,3 @@
-using System;
 using StorageTweaks.Patches;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -40,7 +39,6 @@ public class InventoryActionButtons
         AddFavoriteToggle(invComposer);
         capi.Logger.Debug("[StorageTweaks] Adding storagetweaks-hide-favorites button");
         AddFavoritesHideToggle(invComposer);
-        invComposer.Compose();
     }
 
     private void AddFavoriteToggle(GuiComposer composer)
