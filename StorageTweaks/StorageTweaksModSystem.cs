@@ -85,7 +85,13 @@ public class StorageTweaksModSystem : ModSystem
 
     public override void Start(ICoreAPI api)
     {
+        api.Logger.VerboseDebug("[StorageTweaks] Starting StorageTweaksModSystem {0}", api.GetType().Name);
         logger = api.Logger;
+    }
+
+    public override void StartPre(ICoreAPI api)
+    {
+        api.Logger.VerboseDebug("[StorageTweaks] PreStart StorageTweaksModSystem {0}", api.GetType().Name);
     }
 
     public override void StartClientSide(ICoreClientAPI api)
