@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using HarmonyLib;
 using ProtoBuf;
@@ -333,62 +332,91 @@ public class StorageTweaksModSystem : ModSystem
         // Examples: ItemSlotBagContentWithWildcardMatch, ItemSlotTakeOutOnly
         slots = slots.Where(slot => !IsExcludedSlot(slot)).ToList();
 
-        // Clone inventory into DummySlots so all changes are made on the clone
-        var clonedSlots = slots.Select(s => new DummySlot(s.Itemstack?.Clone())).ToList();
+        // Clone inventory for rollback on failure
+        var backup = slots.Select(s => s.Itemstack?.Clone()).ToList();
 
-        // Compact stacks
-        for (var i = 0; i < clonedSlots.Count; i++)
+        try
         {
-            var sourceSlot = clonedSlots[i];
-            if (sourceSlot.Empty) continue;
-
-            var stack = sourceSlot.Itemstack;
-
-            // Try to merge this stack into every other suitable slot
-            for (var j = 0; j < clonedSlots.Count; j++)
+            // Compact stacks
+            for (var i = 0; i < slots.Count; i++)
             {
-                if (i == j) continue; // Don't merge into itself
+                var sourceSlot = slots[i];
+                if (sourceSlot.Empty) continue;
 
-                var targetSlot = clonedSlots[j];
-                if (targetSlot.Empty) continue;
+                var stack = sourceSlot.Itemstack;
 
-                sourceSlot.TryPutInto(world, targetSlot, stack.StackSize);
-                if (sourceSlot.Empty) break;
+                // Try to merge this stack into every other suitable slot
+                for (var j = 0; j < slots.Count; j++)
+                {
+                    if (i == j) continue; // Don't merge into itself
+
+                    var targetSlot = slots[j];
+                    if (targetSlot.Empty) continue;
+
+                    sourceSlot.TryPutInto(world, targetSlot, stack.StackSize);
+                    if (sourceSlot.Empty) break;
+                }
             }
+
+            var itemStacks = slots.Where(s => !s.Empty).Select(x => x.TakeOutWhole()).ToList();
+
+            // Sort by Class, Code, Contents and StackSize
+            itemStacks.Sort((a, b) =>
+            {
+                var classComparison =
+                    string.Compare(a.Collectible.Class, b.Collectible.Class, StringComparison.Ordinal);
+                if (classComparison != 0) return classComparison;
+
+                var codeComparison = a.Collectible.Code.CompareTo(b.Collectible.Code);
+                if (codeComparison != 0) return codeComparison;
+
+                var contentsA = a.Attributes.GetTreeAttribute("contents")?.ToJsonToken() ?? "";
+                var contentsB = b.Attributes.GetTreeAttribute("contents")?.ToJsonToken() ?? "";
+                var contentsComparison = string.Compare(contentsA, contentsB, StringComparison.Ordinal);
+
+                return contentsComparison != 0 ? contentsComparison : b.StackSize.CompareTo(a.StackSize);
+            });
+
+            var skippedSlots = new List<ItemSlot>();
+            // store the sorted stacks
+            foreach (var stack in itemStacks)
+            {
+                skippedSlots.Clear();
+                var sourceSlot = new DummySlot(stack);
+                while (!sourceSlot.Empty && sourceSlot.Itemstack?.StackSize != 0)
+                {
+                    var op = new ItemStackMoveOperation(world, EnumMouseButton.Left, 0, EnumMergePriority.AutoMerge,
+                        stack.StackSize);
+                    var weightedSlot = inventory.GetBestSuitedSlot(sourceSlot,
+                        null, skippedSlots);
+                    if (weightedSlot.slot == null) throw new Exception("Failed to find a target slot to store stack");
+
+                    skippedSlots.Add(weightedSlot.slot);
+                    if (IsExcludedSlot(weightedSlot.slot))
+                    {
+                        world.Logger.Warning("Got best suited slot that is excluded: {0}",
+                            weightedSlot.slot.GetType().Name);
+                        continue;
+                    }
+
+                    sourceSlot.TryPutInto(weightedSlot.slot, ref op);
+                }
+            }
+
+
+            foreach (var slot in slots)
+                slot.MarkDirty();
         }
-
-        var itemStacks = clonedSlots.Where(s => !s.Empty).Select(x =>
+        catch (Exception e)
         {
-            Debug.Assert(x.Itemstack != null);
-            return x.TakeOutWhole();
-        }).ToList();
+            // Restore from backup on failure
+            for (var i = 0; i < slots.Count; i++)
+            {
+                slots[i].Itemstack = backup[i];
+                slots[i].MarkDirty();
+            }
 
-        // Sort by Class, Code, Contents and StackSize
-        itemStacks.Sort((a, b) =>
-        {
-            var classComparison = string.Compare(a.Collectible.Class, b.Collectible.Class, StringComparison.Ordinal);
-            if (classComparison != 0) return classComparison;
-
-            var codeComparison = a.Collectible.Code.CompareTo(b.Collectible.Code);
-            if (codeComparison != 0) return codeComparison;
-
-            var contentsA = a.Attributes.GetTreeAttribute("contents")?.ToJsonToken() ?? "";
-            var contentsB = b.Attributes.GetTreeAttribute("contents")?.ToJsonToken() ?? "";
-            var contentsComparison = string.Compare(contentsA, contentsB, StringComparison.Ordinal);
-
-            return contentsComparison != 0 ? contentsComparison : b.StackSize.CompareTo(a.StackSize);
-        });
-
-        // Fill cloned slots sequentially with sorted stacks
-        var fillIndex = 0;
-        foreach (var stack in itemStacks)
-            clonedSlots[fillIndex++].Itemstack = stack;
-
-        // Hotswap: apply final cloned state to actual inventory slots
-        for (var i = 0; i < slots.Count; i++)
-        {
-            slots[i].Itemstack = clonedSlots[i].Itemstack;
-            slots[i].MarkDirty();
+            world.Logger.Fatal($"[StorageTweaks] Error in sort inventory: {e}");
         }
     }
 
