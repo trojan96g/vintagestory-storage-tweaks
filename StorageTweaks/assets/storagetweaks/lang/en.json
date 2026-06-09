@@ -1,6 +1,7 @@
 {
   "toggle-favorite-mode-help": "<strong>Favorite Mode</strong>\nWhen active, clicking items in inventory adds or removes them from the favorites list instead of picking them up.\n\nFavorites do not get unloaded with the quick store/unload buttons.",
   "toggle-hide-favorites": "Toggles whether favorite icon is always shown in item slots or only when favorite selection mode is active.",
+  "toggle-stack-perishables-help": "<strong>Force-stack on unload</strong>\nWhen active, quick store/unload combines items that normally won't auto-merge, such as food with different freshness (their spoil progress is blended). When inactive, those stacks are left separate.",
   "compact-and-sort": "Compact & sort",
   "quick-store": "Quick store matching items from your inventory and hotbar",
   "store-nearby": "Quick store items in nearby containers with matching contents",

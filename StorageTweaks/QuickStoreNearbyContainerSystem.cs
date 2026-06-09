@@ -40,7 +40,7 @@ public static class QuickStoreNearbyContainerSystem
 
     public static void HandleQuickStoreNearbyContainers(
         IServerPlayer fromPlayer,
-        QuickStoreNearbyContainersPacket _
+        QuickStoreNearbyContainersPacket packet
     )
     {
         var logger = fromPlayer.Entity.Api.Logger;
@@ -61,7 +61,7 @@ public static class QuickStoreNearbyContainerSystem
 
         foreach (var container in nearbyContainers)
         {
-            StorageTweaksModSystem.UnloadInventory(fromPlayer, container.Inventory);
+            StorageTweaksModSystem.UnloadInventory(fromPlayer, container.Inventory, packet.StackPerishables);
         }
     }
 }

@@ -22,10 +22,15 @@ public class SortInventoryPacket
 public class UnloadInventoryPacket
 {
     [ProtoMember(1)] public required string InventoryId;
+
+    [ProtoMember(2)] public bool StackPerishables;
 }
 
 [ProtoContract]
-public class QuickStoreNearbyContainersPacket;
+public class QuickStoreNearbyContainersPacket
+{
+    [ProtoMember(1)] public bool StackPerishables;
+}
 
 [ProtoContract]
 public class UpdateFavoritesPacket
@@ -41,6 +46,11 @@ public class UpdateFavoritesPacket
 public class StorageTweaksClientConfig
 {
     public bool HideFavorites { get; set; }
+
+    /// When true, food with differing perish/spoil progress is stacked on unload,
+    /// blending the transition state (same as a manual merge). Default false keeps
+    /// the vanilla behavior of not auto-merging differently-perished stacks.
+    public bool StackPerishablesOnUnload { get; set; }
 }
 
 // ReSharper disable once UnusedType.Global
@@ -257,10 +267,11 @@ public class StorageTweaksModSystem : ModSystem
             return;
         }
 
-        UnloadInventory(fromPlayer, destInventory);
+        UnloadInventory(fromPlayer, destInventory, packet.StackPerishables);
     }
 
-    public static void UnloadInventory(IServerPlayer fromPlayer, IInventory destInventory)
+    public static void UnloadInventory(IServerPlayer fromPlayer, IInventory destInventory,
+        bool stackPerishables = false)
     {
         var playerInv = fromPlayer.InventoryManager.GetOwnInventory(GlobalConstants.backpackInvClassName);
         if (playerInv == null)
@@ -290,12 +301,12 @@ public class StorageTweaksModSystem : ModSystem
 
         if (existingCodes.Count == 0) return;
 
-        ProcessInventorySlots(playerInv, destInventory, existingCodes, fromPlayer);
-        ProcessInventorySlots(playerHotbar, destInventory, existingCodes, fromPlayer);
+        ProcessInventorySlots(playerInv, destInventory, existingCodes, fromPlayer, stackPerishables);
+        ProcessInventorySlots(playerHotbar, destInventory, existingCodes, fromPlayer, stackPerishables);
     }
 
     private static void ProcessInventorySlots(IInventory sourceInventory, IInventory destInventory,
-        HashSet<string> existingCodes, IServerPlayer fromPlayer)
+        HashSet<string> existingCodes, IServerPlayer fromPlayer, bool stackPerishables)
     {
         List<ItemSlot> ignoredSlots = [];
         foreach (var slot in sourceInventory)
@@ -306,9 +317,12 @@ public class StorageTweaksModSystem : ModSystem
 
             ignoredSlots.Clear();
             var world = fromPlayer.Entity.World;
+            // DirectMerge blends transition state so differently-perished food stacks;
+            // AutoMerge (vanilla) refuses to merge stacks with mismatched perish progress.
+            var mergePriority = stackPerishables ? EnumMergePriority.DirectMerge : EnumMergePriority.AutoMerge;
             while (true)
             {
-                var op = new ItemStackMoveOperation(world, EnumMouseButton.Left, 0, EnumMergePriority.AutoMerge,
+                var op = new ItemStackMoveOperation(world, EnumMouseButton.Left, 0, mergePriority,
                     slot.StackSize);
                 var suitedSlot = destInventory.GetBestSuitedSlot(slot, op, ignoredSlots);
                 if (suitedSlot.slot == null || suitedSlot.weight == 0) break;

@@ -32,13 +32,44 @@ public class InventoryActionButtons
 
         capi.Logger.Debug("[StorageTweaks] Adding store-nearby button");
         PatchUtils.AddButton(invComposer, "store-nearby", -86,
-            _ => PatchUtils.SendPacket(capi, new QuickStoreNearbyContainersPacket()),
+            _ => PatchUtils.SendPacket(capi, new QuickStoreNearbyContainersPacket
+            {
+                StackPerishables = StorageTweaksModSystem.GetClientConfig().StackPerishablesOnUnload
+            }),
             Lang.Get("storagetweaks:store-nearby"));
 
         capi.Logger.Debug("[StorageTweaks] Adding storagetweaks-favorite button");
         AddFavoriteToggle(invComposer);
         capi.Logger.Debug("[StorageTweaks] Adding storagetweaks-hide-favorites button");
         AddFavoritesHideToggle(invComposer);
+        capi.Logger.Debug("[StorageTweaks] Adding storagetweaks-stack-perishables button");
+        AddStackPerishablesToggle(invComposer);
+    }
+
+    private void AddStackPerishablesToggle(GuiComposer composer)
+    {
+        var bounds = ElementBounds.Fixed(EnumDialogArea.RightTop, -164, 5, 24, 24);
+        var toggleBtn = new GuiElementToggleButton(capi, null, "",
+            CairoFont.SmallButtonText(), on =>
+            {
+                var config = StorageTweaksModSystem.GetClientConfig();
+                config.StackPerishablesOnUnload = on;
+                capi.StoreModConfig(config, "storagetweaks.json");
+            }, bounds, true);
+        toggleBtn.On = StorageTweaksModSystem.GetClientConfig().StackPerishablesOnUnload;
+        composer.AddInteractiveElement(toggleBtn, "storagetweaks-stack-perishables").AddDynamicCustomDraw(bounds,
+            (_, surface, _) =>
+            {
+                var iconAsset = new AssetLocation("storagetweaks", "textures/icons/stack-perishables.svg");
+                var icon = capi.Assets.TryGet(iconAsset);
+                var iconSize = (int)GuiElement.scaled(20.0);
+                var margin = (int)GuiElement.scaled(2);
+                if (icon != null)
+                    capi.Gui.DrawSvg(icon, surface, margin, margin, iconSize, iconSize, SvgButton.NormalColor);
+            }).AddHoverText(
+            Lang.Get("storagetweaks:toggle-stack-perishables-help"), CairoFont.WhiteSmallText(), 250,
+            bounds.FlatCopy()
+        );
     }
 
     private void AddFavoriteToggle(GuiComposer composer)

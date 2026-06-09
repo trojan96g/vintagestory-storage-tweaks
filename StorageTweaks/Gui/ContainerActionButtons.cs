@@ -16,7 +16,11 @@ public class ContainerActionButtons(ICoreClientAPI capi)
 
         PatchUtils.AddButton(composer, "unload", -86,
             inventory =>
-                PatchUtils.SendPacket(capi, new UnloadInventoryPacket { InventoryId = inventory.InventoryID }), Lang.Get("storagetweaks:quick-store"));
+                PatchUtils.SendPacket(capi, new UnloadInventoryPacket
+                {
+                    InventoryId = inventory.InventoryID,
+                    StackPerishables = StorageTweaksModSystem.GetClientConfig().StackPerishablesOnUnload
+                }), Lang.Get("storagetweaks:quick-store"));
 
         if (wasComposed) composer.Compose();
     }
