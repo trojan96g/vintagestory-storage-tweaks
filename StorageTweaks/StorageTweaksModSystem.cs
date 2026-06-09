@@ -468,15 +468,15 @@ public class StorageTweaksModSystem : ModSystem
     {
         api.Input.RegisterHotKey("storagetweaks.sort",
             Lang.Get("storagetweaks:hotkey-sort-inventory"),
-            GlKeys.Unknown, HotkeyType.GUIOrOtherControls);
+            GlKeys.Unknown, HotkeyType.InventoryHotkeys);
 
         api.Input.RegisterHotKey("storagetweaks.sortcontainer",
             Lang.Get("storagetweaks:hotkey-sort-container"),
-            GlKeys.Unknown, HotkeyType.GUIOrOtherControls);
+            GlKeys.Unknown, HotkeyType.InventoryHotkeys);
         
         api.Input.RegisterHotKey("storagetweaks.storenearby",
             Lang.Get("storagetweaks:hotkey-store-nearby"),
-            GlKeys.Unknown, HotkeyType.GUIOrOtherControls);
+            GlKeys.Unknown, HotkeyType.InventoryHotkeys);
 
         api.Input.SetHotKeyHandler("storagetweaks.sort", _ =>
         {
