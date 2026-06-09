@@ -473,6 +473,10 @@ public class StorageTweaksModSystem : ModSystem
         api.Input.RegisterHotKey("storagetweaks.sortcontainer",
             Lang.Get("storagetweaks:hotkey-sort-container"),
             GlKeys.Unknown, HotkeyType.GUIOrOtherControls);
+        
+        api.Input.RegisterHotKey("storagetweaks.storenearby",
+            Lang.Get("storagetweaks:hotkey-store-nearby"),
+            GlKeys.Unknown, HotkeyType.GUIOrOtherControls);
 
         api.Input.SetHotKeyHandler("storagetweaks.sort", _ =>
         {
@@ -502,6 +506,15 @@ public class StorageTweaksModSystem : ModSystem
             }
 
             return count > 0;
+        });
+
+        api.Input.SetHotKeyHandler("storagetweaks.storenearby", _ =>
+        {
+            PatchUtils.SendPacket(api, new QuickStoreNearbyContainersPacket
+            {
+                StackPerishables = GetClientConfig().StackPerishablesOnUnload
+            });
+            return true;
         });
     }
 
