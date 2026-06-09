@@ -10,7 +10,7 @@ download-deps:
 
 download-vs-1_22:
     #!/usr/bin/env bash
-    VS_DOWNLOAD_URL="https://cdn.vintagestory.at/gamefiles/stable/vs_client_linux-x64_1.22.2.tar.gz"
+    VS_DOWNLOAD_URL="https://cdn.vintagestory.at/gamefiles/stable/vs_client_linux-x64_1.22.3.tar.gz"
     curl -o vs_1.22.tar.gz $VS_DOWNLOAD_URL
     if [[ -d "vintagestory_1.22" ]]; then
       rm -r vintagestory_1.22 
