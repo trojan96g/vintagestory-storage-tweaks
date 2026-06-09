@@ -13,7 +13,7 @@ namespace StorageTweaks.Patches;
 [HarmonyPatch]
 public static class GuiDialogBlockEntityInventoryPatch
 {
-    private static readonly string[] DialogNamePrefixes = ["blockentityinventory", "attachedcontainer"];
+    public static readonly string[] DialogNamePrefixes = ["blockentityinventory", "attachedcontainer"];
 
     [HarmonyPatch(typeof(GuiDialog), "OnGuiOpened")]
     [HarmonyPostfix]

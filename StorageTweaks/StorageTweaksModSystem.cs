@@ -4,6 +4,7 @@ using System.Linq;
 using HarmonyLib;
 using ProtoBuf;
 using StorageTweaks.Gui;
+using StorageTweaks.Patches;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -125,6 +126,8 @@ public class StorageTweaksModSystem : ModSystem
         harmony = new Harmony("storagetweaks");
         harmony.PatchAll();
         capi.Logger.VerboseDebug("[StorageTweaks] Completed harmony patches");
+
+        RegisterHotkeys(api);
 
         capi.Logger.VerboseDebug("[StorageTweaks] Started StorageTweaksModSystem client side");
     }
@@ -459,6 +462,47 @@ public class StorageTweaksModSystem : ModSystem
     public static StorageTweaksClientConfig GetClientConfig()
     {
         return config;
+    }
+
+    private static void RegisterHotkeys(ICoreClientAPI api)
+    {
+        api.Input.RegisterHotKey("storagetweaks.sort",
+            Lang.Get("storagetweaks:hotkey-sort-inventory"),
+            GlKeys.Unknown, HotkeyType.GUIOrOtherControls);
+
+        api.Input.RegisterHotKey("storagetweaks.sortcontainer",
+            Lang.Get("storagetweaks:hotkey-sort-container"),
+            GlKeys.Unknown, HotkeyType.GUIOrOtherControls);
+
+        api.Input.SetHotKeyHandler("storagetweaks.sort", _ =>
+        {
+            var inv = api.World.Player.InventoryManager.GetOwnInventory(GlobalConstants.backpackInvClassName);
+            if (inv == null) return false;
+
+            PatchUtils.SendPacket(api, new SortInventoryPacket { InventoryId = inv.InventoryID });
+            return true;
+        });
+
+        api.Input.SetHotKeyHandler("storagetweaks.sortcontainer", _ =>
+        {
+            var count = 0;
+            foreach (var dialog in api.Gui.OpenedGuis)
+            {
+                var composer = dialog.SingleComposer;
+                if (composer?.DialogName == null) continue;
+                if (!GuiDialogBlockEntityInventoryPatch.DialogNamePrefixes.Any(prefix =>
+                        composer.DialogName.StartsWith(prefix, StringComparison.Ordinal))) continue;
+
+                var inv = PatchUtils.GetInventoryForComposer(composer);
+
+                if (inv == null) continue;
+
+                PatchUtils.SendPacket(api, new SortInventoryPacket { InventoryId = inv.InventoryID });
+                count += 1;
+            }
+
+            return count > 0;
+        });
     }
 
     public override void Dispose()

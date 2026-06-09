@@ -5,5 +5,7 @@
   "compact-and-sort": "Compact & sort",
   "quick-store": "Quick store matching items from your inventory and hotbar",
   "store-nearby": "Quick store items in nearby containers with matching contents",
+  "hotkey-sort-inventory": "Sort Inventory",
+  "hotkey-sort-container": "Sort Open Container(s)",
   "game:item-hoovedwearables-lowerbackside-saddlebags2": "Saddlebags"
 }

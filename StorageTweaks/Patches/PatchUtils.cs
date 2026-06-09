@@ -48,7 +48,7 @@ public static class PatchUtils
         );
     }
 
-    private static InventoryBase? GetInventoryForComposer(GuiComposer composer)
+    public static InventoryBase? GetInventoryForComposer(GuiComposer composer)
     {
         if (composer.DialogName == "inventory-backpack")
             return composer.Api.World.Player.InventoryManager.GetOwnInventory(GlobalConstants.backpackInvClassName) as
