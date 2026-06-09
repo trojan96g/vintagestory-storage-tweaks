@@ -40,15 +40,13 @@ public class InventoryActionButtons
 
         capi.Logger.Debug("[StorageTweaks] Adding storagetweaks-favorite button");
         AddFavoriteToggle(invComposer);
-        capi.Logger.Debug("[StorageTweaks] Adding storagetweaks-hide-favorites button");
-        AddFavoritesHideToggle(invComposer);
         capi.Logger.Debug("[StorageTweaks] Adding storagetweaks-stack-perishables button");
         AddStackPerishablesToggle(invComposer);
     }
 
     private void AddStackPerishablesToggle(GuiComposer composer)
     {
-        var bounds = ElementBounds.Fixed(EnumDialogArea.RightTop, -164, 5, 24, 24);
+        var bounds = ElementBounds.Fixed(EnumDialogArea.RightTop, -138, 5, 24, 24);
         var toggleBtn = new GuiElementToggleButton(capi, null, "",
             CairoFont.SmallButtonText(), on =>
             {
@@ -97,26 +95,5 @@ public class InventoryActionButtons
                 250,
                 bounds.FlatCopy()
             );
-    }
-
-    private void AddFavoritesHideToggle(GuiComposer composer)
-    {
-        var bounds = ElementBounds.Fixed(EnumDialogArea.RightTop, -138, 5, 24, 24);
-        var toggleBtn = new GuiElementToggleButton(capi, null, "",
-            CairoFont.SmallButtonText(), on => GuiElementItemSlotGridPatch.HideFavorites = on, bounds, true);
-        toggleBtn.On = GuiElementItemSlotGridPatch.HideFavorites;
-        composer.AddInteractiveElement(toggleBtn, "storagetweaks-hide-favorites").AddDynamicCustomDraw(bounds,
-            (_, surface, _) =>
-            {
-                var iconAsset = new AssetLocation("storagetweaks", "textures/icons/favorites-hide.svg");
-                var icon = capi.Assets.TryGet(iconAsset);
-                var iconSize = (int)GuiElement.scaled(20.0);
-                var margin = (int)GuiElement.scaled(2);
-                if (icon != null)
-                    capi.Gui.DrawSvg(icon, surface, margin, margin, iconSize, iconSize, SvgButton.NormalColor);
-            }).AddHoverText(
-            Lang.Get("storagetweaks:toggle-hide-favorites"), CairoFont.WhiteSmallText(), 250,
-            bounds.FlatCopy()
-        );
     }
 }
