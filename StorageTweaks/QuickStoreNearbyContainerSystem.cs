@@ -83,6 +83,7 @@ public static class QuickStoreNearbyContainerSystem
                 }
 
                 nearbyContainers.Add(container);
+                return;
             }
 
             if (be is not BlockEntityContainer bc) return;
