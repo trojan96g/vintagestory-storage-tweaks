@@ -3,6 +3,7 @@
 // ReSharper disable ClassNeverInstantiated.Global
 
 using System;
+using System.Linq;
 using System.Reflection;
 using HarmonyLib;
 using Vintagestory.API.Client;
@@ -65,7 +66,8 @@ public class GuiDialogInventoryPatch
             return;
         }
 
-        if (composer["storagetweaks-sort"] != null) return;
+        var storageTweaksKeys = new[] { "storagetweaks-sort", "storagetweaks-store-nearby", "storagetweaks-favorite", "storagetweaks-stack-perishables" };
+        if (storageTweaksKeys.Any(key => composer[key] != null)) return;
         var modSystem = capi.ModLoader.GetModSystem<StorageTweaksModSystem>();
         if (modSystem == null) {
             capi.Logger.Warning("[StorageTweaks] Failed to get StorageTweaksModSystem in ComposeSurvivalInvDialog");

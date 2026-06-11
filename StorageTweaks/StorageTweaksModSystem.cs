@@ -54,6 +54,21 @@ public class StorageTweaksClientConfig
     /// blending the transition state (same as a manual merge). Default false keeps
     /// the vanilla behavior of not auto-merging differently-perished stacks.
     public bool StackPerishables { get; set; }
+
+    /// When true, the sort & compact button is hidden in inventory and container GUIs.
+    /// Sorting via hotkey still works.
+    public bool HideSortButton { get; set; }
+
+    /// When true, the quick store nearby button is hidden in the inventory GUI.
+    /// Quick store nearby via hotkey still works.
+    public bool HideStoreNearbyButton { get; set; }
+
+    /// When true, the force-stack on unload toggle is hidden in the inventory GUI.
+    public bool HideStackPerishablesButton { get; set; }
+
+    /// When true, the quick store button is hidden in container GUIs.
+    /// Quick store via hotkey still works.
+    public bool HideQuickStoreButton { get; set; }
 }
 
 // ReSharper disable once UnusedType.Global

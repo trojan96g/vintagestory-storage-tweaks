@@ -26,7 +26,8 @@ public static class GuiDialogBlockEntityInventoryPatch
         if (composer?.DialogName == null) return;
 
         // already added
-        if (composer["storagetweaks-sort"] != null) return;
+        var storageTweaksKeys = new[] { "storagetweaks-sort", "storagetweaks-unload" };
+        if (storageTweaksKeys.Any(key => composer[key] != null)) return;
 
         if (!DialogNamePrefixes.Any(prefix => composer.DialogName.StartsWith(prefix, StringComparison.Ordinal)))
         {

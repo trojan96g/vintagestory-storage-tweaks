@@ -25,32 +25,48 @@ public class InventoryActionButtons
     public void ComposeGui(GuiComposer invComposer)
     {
         invComposer.Composed = false;
-        capi.Logger.Debug("[StorageTweaks] Adding sort button");
-        PatchUtils.AddButton(invComposer, "sort", -60,
-            inventory => PatchUtils.SendPacket(capi, new SortInventoryPacket
-            {
-                InventoryId = inventory.InventoryID,
-                StackPerishables = StorageTweaksModSystem.GetClientConfig().StackPerishables
-            }),
-            Lang.Get("storagetweaks:compact-and-sort"));
+        var config = StorageTweaksModSystem.GetClientConfig();
+        var buttonIndex = 0;
 
-        capi.Logger.Debug("[StorageTweaks] Adding store-nearby button");
-        PatchUtils.AddButton(invComposer, "store-nearby", -86,
-            _ => PatchUtils.SendPacket(capi, new QuickStoreNearbyContainersPacket
-            {
-                StackPerishables = StorageTweaksModSystem.GetClientConfig().StackPerishables
-            }),
-            Lang.Get("storagetweaks:store-nearby"));
+        if (!config.HideSortButton)
+        {
+            capi.Logger.Debug("[StorageTweaks] Adding sort button");
+            PatchUtils.AddButton(invComposer, "sort", -60,
+                inventory => PatchUtils.SendPacket(capi, new SortInventoryPacket
+                {
+                    InventoryId = inventory.InventoryID,
+                    StackPerishables = config.StackPerishables
+                }),
+                Lang.Get("storagetweaks:compact-and-sort"));
+            buttonIndex++;
+        }
+
+        if (!config.HideStoreNearbyButton)
+        {
+            capi.Logger.Debug("[StorageTweaks] Adding store-nearby button");
+            PatchUtils.AddButton(invComposer, "store-nearby", -60 - buttonIndex * 26,
+                _ => PatchUtils.SendPacket(capi, new QuickStoreNearbyContainersPacket
+                {
+                    StackPerishables = config.StackPerishables
+                }),
+                Lang.Get("storagetweaks:store-nearby"));
+            buttonIndex++;
+        }
 
         capi.Logger.Debug("[StorageTweaks] Adding storagetweaks-favorite button");
-        AddFavoriteToggle(invComposer);
-        capi.Logger.Debug("[StorageTweaks] Adding storagetweaks-stack-perishables button");
-        AddStackPerishablesToggle(invComposer);
+        AddFavoriteToggle(invComposer, buttonIndex);
+        buttonIndex++;
+
+        if (!config.HideStackPerishablesButton)
+        {
+            capi.Logger.Debug("[StorageTweaks] Adding storagetweaks-stack-perishables button");
+            AddStackPerishablesToggle(invComposer, buttonIndex);
+        }
     }
 
-    private void AddStackPerishablesToggle(GuiComposer composer)
+    private void AddStackPerishablesToggle(GuiComposer composer, int buttonIndex)
     {
-        var bounds = ElementBounds.Fixed(EnumDialogArea.RightTop, -138, 5, 24, 24);
+        var bounds = ElementBounds.Fixed(EnumDialogArea.RightTop, -60 - buttonIndex * 26, 5, 24, 24);
         var toggleBtn = new GuiElementToggleButton(capi, null, "",
             CairoFont.SmallButtonText(), on =>
             {
@@ -74,13 +90,13 @@ public class InventoryActionButtons
         );
     }
 
-    private void AddFavoriteToggle(GuiComposer composer)
+    private void AddFavoriteToggle(GuiComposer composer, int buttonIndex)
     {
         var iconAsset = new AssetLocation("storagetweaks", "textures/icons/favorite.svg");
         var icon = capi.Assets.TryGet(iconAsset);
         if (icon == null) return;
 
-        var bounds = ElementBounds.Fixed(EnumDialogArea.RightTop, -112, 4, 24, 24);
+        var bounds = ElementBounds.Fixed(EnumDialogArea.RightTop, -60 - buttonIndex * 26, 4, 24, 24);
         favoriteToggleButton = new SvgToggleButton(
             capi,
             icon,
