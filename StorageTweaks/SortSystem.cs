@@ -24,7 +24,7 @@ public static class SortSystem
         // Clone inventory for rollback on failure
         var snapshot = inventory.Select(s => s.Itemstack?.Clone()).ToList();
 
-        var result = SortInventoryInternal(world, inventory);
+        var result = SortInventoryInternal(world, inventory, packet.StackPerishables);
         if (result is not SortError sortError) return;
         world.Logger.Fatal($"[StorageTweaks] Error in sort inventory: {sortError.Message}");
         world.Logger.Debug("[StorageTweaks] Attempting to rollback inventory");
@@ -49,9 +49,11 @@ public static class SortSystem
         fromPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, $"<font color=\"#ffea00\">{message}</font>", EnumChatType.CommandError);
     }
 
-    private static SortResult SortInventoryInternal(IWorldAccessor world, IInventory inventory)
+    private static SortResult SortInventoryInternal(IWorldAccessor world, IInventory inventory, bool stackPerishables)
     {
         // we should probably add checks if the player is allowed to access the inventory
+
+        var mergePriority = stackPerishables ? EnumMergePriority.DirectMerge : EnumMergePriority.AutoMerge;
 
         var slots = inventory.ToList();
 
@@ -77,7 +79,8 @@ public static class SortSystem
                     var targetSlot = slots[j];
                     if (targetSlot.Empty) continue;
 
-                    sourceSlot.TryPutInto(world, targetSlot, stack.StackSize);
+                    var op = new ItemStackMoveOperation(world, EnumMouseButton.Left, 0, mergePriority, stack.StackSize);
+                    sourceSlot.TryPutInto(targetSlot, ref op);
                     if (sourceSlot.Empty) break;
                 }
             }
@@ -110,10 +113,10 @@ public static class SortSystem
                 var sourceSlot = new DummySlot(stack);
                 while (!sourceSlot.Empty && sourceSlot.Itemstack?.StackSize != 0)
                 {
-                    var op = new ItemStackMoveOperation(world, EnumMouseButton.Left, 0, EnumMergePriority.AutoMerge,
+                    var op = new ItemStackMoveOperation(world, EnumMouseButton.Left, 0, mergePriority,
                         stack.StackSize);
                     var weightedSlot = inventory.GetBestSuitedSlot(sourceSlot,
-                        null, skippedSlots);
+                        op, skippedSlots);
                     if (weightedSlot.slot == null) return new SortError("Failed to find a target slot to store stack");
 
                     skippedSlots.Add(weightedSlot.slot);

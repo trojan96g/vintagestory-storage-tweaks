@@ -17,6 +17,8 @@ namespace StorageTweaks;
 public class SortInventoryPacket
 {
     [ProtoMember(1)] public required string InventoryId;
+
+    [ProtoMember(2)] public bool StackPerishables;
 }
 
 [ProtoContract]
@@ -51,7 +53,7 @@ public class StorageTweaksClientConfig
     /// When true, food with differing perish/spoil progress is stacked on unload,
     /// blending the transition state (same as a manual merge). Default false keeps
     /// the vanilla behavior of not auto-merging differently-perished stacks.
-    public bool StackPerishablesOnUnload { get; set; }
+    public bool StackPerishables { get; set; }
 }
 
 // ReSharper disable once UnusedType.Global
@@ -376,12 +378,17 @@ public class StorageTweaksModSystem : ModSystem
             var inv = api.World.Player.InventoryManager.GetOwnInventory(GlobalConstants.backpackInvClassName);
             if (inv == null) return false;
 
-            PatchUtils.SendPacket(api, new SortInventoryPacket { InventoryId = inv.InventoryID });
+            PatchUtils.SendPacket(api, new SortInventoryPacket
+            {
+                InventoryId = inv.InventoryID,
+                StackPerishables = GetClientConfig().StackPerishables
+            });
             return true;
         });
 
         api.Input.SetHotKeyHandler("storagetweaks.sortcontainer", _ =>
         {
+            var stackPerishables = GetClientConfig().StackPerishables;
             var count = 0;
             foreach (var dialog in api.Gui.OpenedGuis)
             {
@@ -394,7 +401,11 @@ public class StorageTweaksModSystem : ModSystem
 
                 if (inv == null) continue;
 
-                PatchUtils.SendPacket(api, new SortInventoryPacket { InventoryId = inv.InventoryID });
+                PatchUtils.SendPacket(api, new SortInventoryPacket
+                {
+                    InventoryId = inv.InventoryID,
+                    StackPerishables = stackPerishables
+                });
                 count += 1;
             }
 
@@ -405,7 +416,7 @@ public class StorageTweaksModSystem : ModSystem
         {
             PatchUtils.SendPacket(api, new QuickStoreNearbyContainersPacket
             {
-                StackPerishables = GetClientConfig().StackPerishablesOnUnload
+                StackPerishables = GetClientConfig().StackPerishables
             });
             return true;
         });

@@ -27,14 +27,18 @@ public class InventoryActionButtons
         invComposer.Composed = false;
         capi.Logger.Debug("[StorageTweaks] Adding sort button");
         PatchUtils.AddButton(invComposer, "sort", -60,
-            inventory => PatchUtils.SendPacket(capi, new SortInventoryPacket { InventoryId = inventory.InventoryID }),
+            inventory => PatchUtils.SendPacket(capi, new SortInventoryPacket
+            {
+                InventoryId = inventory.InventoryID,
+                StackPerishables = StorageTweaksModSystem.GetClientConfig().StackPerishables
+            }),
             Lang.Get("storagetweaks:compact-and-sort"));
 
         capi.Logger.Debug("[StorageTweaks] Adding store-nearby button");
         PatchUtils.AddButton(invComposer, "store-nearby", -86,
             _ => PatchUtils.SendPacket(capi, new QuickStoreNearbyContainersPacket
             {
-                StackPerishables = StorageTweaksModSystem.GetClientConfig().StackPerishablesOnUnload
+                StackPerishables = StorageTweaksModSystem.GetClientConfig().StackPerishables
             }),
             Lang.Get("storagetweaks:store-nearby"));
 
@@ -51,10 +55,10 @@ public class InventoryActionButtons
             CairoFont.SmallButtonText(), on =>
             {
                 var config = StorageTweaksModSystem.GetClientConfig();
-                config.StackPerishablesOnUnload = on;
+                config.StackPerishables = on;
                 capi.StoreModConfig(config, "storagetweaks.json");
             }, bounds, true);
-        toggleBtn.On = StorageTweaksModSystem.GetClientConfig().StackPerishablesOnUnload;
+        toggleBtn.On = StorageTweaksModSystem.GetClientConfig().StackPerishables;
         composer.AddInteractiveElement(toggleBtn, "storagetweaks-stack-perishables").AddDynamicCustomDraw(bounds,
             (_, surface, _) =>
             {
