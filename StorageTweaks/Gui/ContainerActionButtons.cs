@@ -11,20 +11,30 @@ public class ContainerActionButtons(ICoreClientAPI capi)
     {
         var wasComposed = composer.Composed;
         composer.Composed = false;
-        PatchUtils.AddButton(composer, "sort", -60,
-            inventory => PatchUtils.SendPacket(capi, new SortInventoryPacket
-            {
-                InventoryId = inventory.InventoryID,
-                StackPerishables = StorageTweaksModSystem.GetClientConfig().StackPerishables
-            }), Lang.Get("storagetweaks:compact-and-sort"));
+        var config = StorageTweaksModSystem.GetClientConfig();
+        var buttonIndex = 0;
 
-        PatchUtils.AddButton(composer, "unload", -86,
-            inventory =>
-                PatchUtils.SendPacket(capi, new UnloadInventoryPacket
+        if (!config.HideSortButton)
+        {
+            PatchUtils.AddButton(composer, "sort", -60,
+                inventory => PatchUtils.SendPacket(capi, new SortInventoryPacket
                 {
                     InventoryId = inventory.InventoryID,
-                    StackPerishables = StorageTweaksModSystem.GetClientConfig().StackPerishables
-                }), Lang.Get("storagetweaks:quick-store"));
+                    StackPerishables = config.StackPerishables
+                }), Lang.Get("storagetweaks:compact-and-sort"));
+            buttonIndex++;
+        }
+
+        if (!config.HideQuickStoreButton)
+        {
+            PatchUtils.AddButton(composer, "unload", -60 - buttonIndex * 26,
+                inventory =>
+                    PatchUtils.SendPacket(capi, new UnloadInventoryPacket
+                    {
+                        InventoryId = inventory.InventoryID,
+                        StackPerishables = config.StackPerishables
+                    }), Lang.Get("storagetweaks:quick-store"));
+        }
 
         if (wasComposed) composer.Compose();
     }

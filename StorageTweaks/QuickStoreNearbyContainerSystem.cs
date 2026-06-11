@@ -61,6 +61,28 @@ public static class QuickStoreNearbyContainerSystem
         ("chest", "longcrate"),
         ("chest", "linencrate"),
         ("chest", "foodcupboardwall"),
+        
+        // Purposeful Storage mod
+        ("pantsrack", "pantsrack"),
+        ("necklacestand", "necklacestand"),
+        ("shoerack", "shoerack"),
+        ("hatrack", "hatrack"),
+        ("wardrobe", "wardrobe"),
+        ("swordpedestal", "swordpedestal"),
+        ("gloverack", "gloverack"),
+        ("blanketrack", "blanketrack"),
+        ("weaponrack", "weaponrack"),
+        ("belthooks", "belthooks"),
+        ("butterflydisplaypanel", "butterflydisplaypanel"),
+        ("swordplaque", "swordplaque"),
+        ("gearrack", "gearrack"),
+        ("medallionrack", "medallionrack"),
+        ("saddlerack", "saddlerack"),
+        ("schematicrack", "schematicrack"),
+        ("tuningcylinderrack", "tuningcylinderrack"),
+        ("resourcebin", "resourcebin"),
+        ("spearrack", "spearrack"),
+        ("glidermount", "glidermount"),
     ];
 
     private static List<BlockEntityContainer> GetNearbyContainers(IWorldAccessor world, BlockPos position,
@@ -125,6 +147,10 @@ public static class QuickStoreNearbyContainerSystem
         foreach (var container in nearbyContainers)
         {
             StorageTweaksModSystem.UnloadInventory(fromPlayer, container.Inventory, packet.StackPerishables);
+            if (container.Block.Code.Domain == "purposefulstorage")
+            {
+                container.MarkDirty(true);
+            }
         }
     }
 }
