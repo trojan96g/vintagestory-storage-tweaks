@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using HarmonyLib;
 using ProtoBuf;
@@ -311,12 +312,21 @@ public class StorageTweaksModSystem : ModSystem
             existingCodes.Add(destSlot.Itemstack.Collectible.Code.ToString());
         }
 
-        if (existingCodes.Count == 0) return;
+        if (existingCodes.Count == 0)
+        {
+            Logger().Debug("[StorageTweaks] UnloadInventory: no existing codes in dest ({0}), skipping", destInventory.InventoryID);
+            return;
+        }
+
+        Logger().Debug("[StorageTweaks] UnloadInventory: dest={0} class={1} slots={2} existingCodes=[{3}] stackPerishables={4}",
+            destInventory.InventoryID, destInventory.GetType().Name, destInventory.Count,
+            string.Join(",", existingCodes), stackPerishables);
 
         ProcessInventorySlots(playerInv, destInventory, existingCodes, fromPlayer, stackPerishables);
         ProcessInventorySlots(playerHotbar, destInventory, existingCodes, fromPlayer, stackPerishables);
     }
 
+    [SuppressMessage("ReSharper", "SuggestBaseTypeForParameter")]
     private static void ProcessInventorySlots(IInventory sourceInventory, IInventory destInventory,
         HashSet<string> existingCodes, IServerPlayer fromPlayer, bool stackPerishables)
     {
@@ -337,11 +347,59 @@ public class StorageTweaksModSystem : ModSystem
                 var op = new ItemStackMoveOperation(world, EnumMouseButton.Left, 0, mergePriority,
                     slot.StackSize);
                 var suitedSlot = destInventory.GetBestSuitedSlot(slot, op, ignoredSlots);
-                if (suitedSlot.slot == null || suitedSlot.weight == 0) break;
+                if (suitedSlot.slot == null || suitedSlot.weight == 0)
+                {
+                    var fallbackIgnored = new HashSet<ItemSlot>();
+                    foreach (var destSlot in destInventory)
+                    {
+                        if (fallbackIgnored.Contains(destSlot))
+                        {
+                            continue;
+                        }
+                        if (!destSlot.CanHold(slot))
+                        {
+                            fallbackIgnored.Add(destSlot);
+                            continue;
+                        }
+                        var isFsSlot = destSlot.GetType().Name.StartsWith("ItemSlotFS"); //FoodStorage stack merge override
+                        var fallbackPriority = isFsSlot ? EnumMergePriority.DirectMerge : mergePriority;
+                        var fallbackOp = new ItemStackMoveOperation(world, EnumMouseButton.Left, 0,
+                            fallbackPriority, slot.StackSize);
+                        slot.TryPutInto(destSlot, ref fallbackOp);
+                        if (fallbackOp.MovedQuantity == 0 && isFsSlot)
+                        {
+                            var room = destSlot.MaxSlotStackSize - (destSlot.Itemstack?.StackSize ?? 0);
+                            if (room > 0 && !destSlot.Empty &&
+                                destSlot.Itemstack.Equals(world, slot.Itemstack, GlobalConstants.IgnoredStackAttributes))
+                            {
+                                var toMove = Math.Min(slot.StackSize, room);
+                                destSlot.Itemstack.StackSize += toMove;
+                                slot.Itemstack.StackSize -= toMove;
+                                if (slot.Itemstack.StackSize <= 0)
+                                {
+                                    slot.Itemstack = null;
+                                }
+                                destSlot.MarkDirty();
+                                slot.MarkDirty();
+                            }
+                            else
+                            {
+                                fallbackIgnored.Add(destSlot);
+                            }
+                        }
+                        if (slot.Empty)
+                        {
+                            break;
+                        }
+                    }
+                    break;
+                }
 
                 slot.TryPutInto(suitedSlot.slot, ref op);
-                if (slot.Empty) break;
-
+                if (slot.Empty)
+                {
+                    break;
+                }
                 ignoredSlots.Add(suitedSlot.slot);
             }
         }
