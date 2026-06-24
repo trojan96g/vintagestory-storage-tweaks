@@ -21,7 +21,10 @@ public static class PatchUtils
         var capi = composer.Api;
         var iconAsset = new AssetLocation("storagetweaks", $"textures/icons/{type}.svg");
         var icon = capi.Assets.TryGet(iconAsset);
-        if (icon == null) return;
+        if (icon == null)
+        {
+            return;
+        }
 
         var bounds = ElementBounds.Fixed(EnumDialogArea.RightTop, xOffset, 4, 24, 24);
         var btn = new SvgButton(
@@ -30,11 +33,16 @@ public static class PatchUtils
             () =>
             {
                 var inventory = GetInventoryForComposer(composer);
-                if (inventory != null) onClick(inventory);
+                if (inventory != null)
+                {
+                    onClick(inventory);
+                }
                 else
+                {
                     capi.Logger.Debug(
                         "[StorageTweaks] {0} button clicked, but GetInventory returned null for composer {1}",
                         char.ToUpper(type[0]) + type[1..], composer.DialogName);
+                }
 
                 return true;
             },
@@ -52,8 +60,10 @@ public static class PatchUtils
     public static InventoryBase? GetInventoryForComposer(GuiComposer composer)
     {
         if (composer.DialogName == "inventory-backpack")
+        {
             return composer.Api.World.Player.InventoryManager.GetOwnInventory(GlobalConstants.backpackInvClassName) as
                 InventoryBase;
+        }
 
         var dialog = composer.Api.Gui.OpenedGuis.Find(d => d.Composers.Values.Any(c => c == composer));
 
@@ -70,9 +80,14 @@ public static class PatchUtils
         where T : notnull
     {
         var channel = capi.Network.GetChannel("storagetweaks");
-        if (channel != null) channel.SendPacket(packet);
+        if (channel != null)
+        {
+            channel.SendPacket(packet);
+        }
         else
+        {
             capi.Logger.Debug("[StorageTweaks] Failed to get network channel 'storagetweaks' for {0}",
                 packet.GetType().Name);
+        }
     }
 }

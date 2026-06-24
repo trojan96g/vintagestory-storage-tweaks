@@ -27,7 +27,10 @@ public class GuiDialogInventoryPatch
             return;
         }
 
-        if (composer.DialogName != "inventory-backpack") return;
+        if (composer.DialogName != "inventory-backpack")
+        {
+            return;
+        }
 
         capi.Logger.Debug("[StorageTweaks] Composing inventory action buttons.");
 
@@ -72,7 +75,11 @@ public class GuiDialogInventoryPatch
             "storagetweaks-sort", "storagetweaks-store-nearby", "storagetweaks-favorite",
             "storagetweaks-stack-perishables"
         };
-        if (storageTweaksKeys.Any(key => composer[key] != null)) return;
+        if (storageTweaksKeys.Any(key => composer[key] != null))
+        {
+            return;
+        }
+
         var modSystem = capi.ModLoader.GetModSystem<StorageTweaksModSystem>();
         if (modSystem == null)
         {
@@ -88,10 +95,18 @@ public class GuiDialogInventoryPatch
     // ReSharper disable once InconsistentNaming
     public static void OnGuiClosed(GuiDialog __instance)
     {
-        if (__instance is not GuiDialogInventory && __instance.GetType().Name != "GuiDialogSurvivalInventory") return;
+        if (__instance is not GuiDialogInventory && __instance.GetType().Name != "GuiDialogSurvivalInventory")
+        {
+            return;
+        }
+
         var capi = GetApi(__instance);
         var modSystem = capi.ModLoader.GetModSystem<StorageTweaksModSystem>();
-        if (modSystem?.FavoritesManager == null) return;
+        if (modSystem?.FavoritesManager == null)
+        {
+            return;
+        }
+
         modSystem.FavoritesManager.IsFavoriteModeActive = false;
     }
 

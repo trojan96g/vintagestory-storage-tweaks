@@ -21,7 +21,10 @@ public class FavoritesManager
     public bool IsFavorite(ItemStack stack)
     {
         var tree = capi.World.Player?.Entity?.WatchedAttributes;
-        if (tree == null || stack.Collectible?.Code == null) return false;
+        if (tree == null || stack.Collectible?.Code == null)
+        {
+            return false;
+        }
 
         var favoritesAttr = tree.GetTreeAttribute(FavoritesKey);
         return favoritesAttr?.GetAsBool(GetItemKey(stack)) ?? false;
@@ -29,7 +32,10 @@ public class FavoritesManager
 
     public void ToggleFavorite(ItemStack stack)
     {
-        if (stack.Collectible?.Code == null) return;
+        if (stack.Collectible?.Code == null)
+        {
+            return;
+        }
 
         var key = GetItemKey(stack);
         var newState = !IsFavorite(stack);
@@ -44,8 +50,14 @@ public class FavoritesManager
                 tree[FavoritesKey] = favoritesAttr;
             }
 
-            if (newState) favoritesAttr.SetBool(key, newState);
-            else favoritesAttr.RemoveAttribute(key);
+            if (newState)
+            {
+                favoritesAttr.SetBool(key, newState);
+            }
+            else
+            {
+                favoritesAttr.RemoveAttribute(key);
+            }
         }
 
         networkChannel.SendPacket(new UpdateFavoritesPacket { Code = key, IsFavorite = newState });

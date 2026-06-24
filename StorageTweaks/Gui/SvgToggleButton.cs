@@ -122,8 +122,10 @@ public class SvgToggleButton(
             (float)Bounds.InnerWidth, (float)Bounds.InnerHeight);
 
         if (mouseOver)
+        {
             api.Render.Render2DTexture(hoverTexture.TextureId, (float)Bounds.absX, (float)Bounds.absY,
                 (float)Bounds.InnerWidth, (float)Bounds.InnerHeight);
+        }
     }
 
     public override void OnMouseDownOnElement(ICoreClientAPI capi, MouseEvent args)

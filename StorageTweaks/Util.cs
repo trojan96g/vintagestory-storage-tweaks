@@ -22,11 +22,23 @@ public static class Util
         BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance)
     {
         var type = instance?.GetType();
-        if (type == null) return default;
+        if (type == null)
+        {
+            return default;
+        }
+
         var fieldInfo = type.GetField(fieldName, bindingFlags);
-        if (typeof(T).IsAssignableFrom(fieldInfo?.FieldType)) return (T)fieldInfo.GetValue(instance)!;
+        if (typeof(T).IsAssignableFrom(fieldInfo?.FieldType))
+        {
+            return (T)fieldInfo.GetValue(instance)!;
+        }
+
         var propertyInfo = type.GetProperty(fieldName, bindingFlags);
-        if (typeof(T).IsAssignableFrom(propertyInfo?.PropertyType)) return (T)propertyInfo.GetValue(instance)!;
+        if (typeof(T).IsAssignableFrom(propertyInfo?.PropertyType))
+        {
+            return (T)propertyInfo.GetValue(instance)!;
+        }
+
         return default;
     }
 }

@@ -83,7 +83,9 @@ public class InventoryActionButtons
                 var iconSize = (int)GuiElement.scaled(20.0);
                 var margin = (int)GuiElement.scaled(2);
                 if (icon != null)
+                {
                     capi.Gui.DrawSvg(icon, surface, margin, margin, iconSize, iconSize, SvgButton.NormalColor);
+                }
             }).AddHoverText(
             Lang.Get("storagetweaks:toggle-stack-perishables-help"), CairoFont.WhiteSmallText(), 250,
             bounds.FlatCopy()
@@ -94,7 +96,10 @@ public class InventoryActionButtons
     {
         var iconAsset = new AssetLocation("storagetweaks", "textures/icons/favorite.svg");
         var icon = capi.Assets.TryGet(iconAsset);
-        if (icon == null) return;
+        if (icon == null)
+        {
+            return;
+        }
 
         var bounds = ElementBounds.Fixed(EnumDialogArea.RightTop, -60 - buttonIndex * 26, 4, 24, 24);
         favoriteToggleButton = new SvgToggleButton(
