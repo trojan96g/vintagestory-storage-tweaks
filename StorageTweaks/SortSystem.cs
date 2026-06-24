@@ -18,14 +18,22 @@ public static class SortSystem
     public static void HandleSortInventory(IServerPlayer fromPlayer, SortInventoryPacket packet)
     {
         var inventory = fromPlayer.InventoryManager.GetInventory(packet.InventoryId);
-        if (inventory == null) return;
+        if (inventory == null)
+        {
+            return;
+        }
+
         var world = fromPlayer.Entity.World;
 
         // Clone inventory for rollback on failure
         var snapshot = inventory.Select(s => s.Itemstack?.Clone()).ToList();
 
         var result = SortInventoryInternal(fromPlayer, inventory, packet.StackPerishables);
-        if (result is not SortError sortError) return;
+        if (result is not SortError sortError)
+        {
+            return;
+        }
+
         world.Logger.Fatal($"[StorageTweaks] Error in sort inventory: {sortError.Message}");
         world.Logger.Debug("[StorageTweaks] Attempting to rollback inventory");
 
@@ -88,14 +96,23 @@ public static class SortSystem
                 // Try to merge this stack into every other suitable slot
                 for (var j = 0; j < slots.Count; j++)
                 {
-                    if (i == j) continue; // Don't merge into itself
+                    if (i == j)
+                    {
+                        continue; // Don't merge into itself
+                    }
 
                     var targetSlot = slots[j];
-                    if (targetSlot.Empty) continue;
+                    if (targetSlot.Empty)
+                    {
+                        continue;
+                    }
 
                     var op = new ItemStackMoveOperation(world, EnumMouseButton.Left, 0, mergePriority, stack.StackSize);
                     sourceSlot.TryPutInto(targetSlot, ref op);
-                    if (sourceSlot.Empty) break;
+                    if (sourceSlot.Empty)
+                    {
+                        break;
+                    }
                 }
             }
 
@@ -107,10 +124,16 @@ public static class SortSystem
             {
                 var classComparison =
                     string.Compare(a.Collectible.Class, b.Collectible.Class, StringComparison.Ordinal);
-                if (classComparison != 0) return classComparison;
+                if (classComparison != 0)
+                {
+                    return classComparison;
+                }
 
                 var codeComparison = a.Collectible.Code.CompareTo(b.Collectible.Code);
-                if (codeComparison != 0) return codeComparison;
+                if (codeComparison != 0)
+                {
+                    return codeComparison;
+                }
 
                 var contentsA = a.Attributes.GetTreeAttribute("contents")?.ToJsonToken() ?? "";
                 var contentsB = b.Attributes.GetTreeAttribute("contents")?.ToJsonToken() ?? "";
@@ -137,7 +160,10 @@ public static class SortSystem
                         weightedSlot = hotbar.GetBestSuitedSlot(sourceSlot, op, skippedSlots);
                     }
 
-                    if (weightedSlot.slot == null) return new SortError("Failed to find a target slot to store stack");
+                    if (weightedSlot.slot == null)
+                    {
+                        return new SortError("Failed to find a target slot to store stack");
+                    }
 
                     skippedSlots.Add(weightedSlot.slot);
                     if (StorageTweaksModSystem.IsExcludedSlot(weightedSlot.slot))
@@ -153,7 +179,9 @@ public static class SortSystem
 
 
             foreach (var slot in slots)
+            {
                 slot.MarkDirty();
+            }
         }
         catch (Exception e)
         {

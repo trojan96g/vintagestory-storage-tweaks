@@ -23,11 +23,17 @@ public static class GuiDialogBlockEntityInventoryPatch
     {
         var capi = GuiDialogInventoryPatch.GetApi(__instance);
         var composer = __instance.SingleComposer;
-        if (composer?.DialogName == null) return;
+        if (composer?.DialogName == null)
+        {
+            return;
+        }
 
         // already added
         var storageTweaksKeys = new[] { "storagetweaks-sort", "storagetweaks-unload" };
-        if (storageTweaksKeys.Any(key => composer[key] != null)) return;
+        if (storageTweaksKeys.Any(key => composer[key] != null))
+        {
+            return;
+        }
 
         if (!DialogNamePrefixes.Any(prefix => composer.DialogName.StartsWith(prefix, StringComparison.Ordinal)))
         {

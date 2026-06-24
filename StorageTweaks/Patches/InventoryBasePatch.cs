@@ -24,16 +24,26 @@ public class InventoryBasePatch
     public static void Postfix(ref float __result, ItemSlot sourceSlot, ItemSlot targetSlot, bool isMerge)
     {
         var slotType = targetSlot.GetType();
-        if (slotType.Name != "ItemSlotBagContentWithWildcardMatch") return;
+        if (slotType.Name != "ItemSlotBagContentWithWildcardMatch")
+        {
+            return;
+        }
 
         var configProp = slotType.GetProperty("Config");
         if (configProp?.GetValue(targetSlot) is not { } config)
+        {
             return;
+        }
 
         var canHoldWildcardsProp = config.GetType().GetProperty("CanHoldWildcards");
         if (canHoldWildcardsProp?.GetValue(config) is not IEnumerable<string> wildcards)
+        {
             return;
+        }
 
-        if (!wildcards.Contains("*")) __result += 1.0f;
+        if (!wildcards.Contains("*"))
+        {
+            __result += 1.0f;
+        }
     }
 }

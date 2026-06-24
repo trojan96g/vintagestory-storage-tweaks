@@ -42,11 +42,17 @@ public class FavoritedSlot
         static void EnsureIconTexture(int size, ICoreClientAPI capi)
         {
             // if size hasn't changed, don't re-render
-            if (favoriteIconTexture?.Width == size) return;
+            if (favoriteIconTexture?.Width == size)
+            {
+                return;
+            }
 
             var favoriteIconAsset =
                 capi.Assets.TryGet(new AssetLocation("storagetweaks", "textures/icons/favorite-slot-corner.svg"));
-            if (favoriteIconAsset == null) return;
+            if (favoriteIconAsset == null)
+            {
+                return;
+            }
 
             favoriteIconTexture?.Dispose();
             favoriteIconTexture = new LoadedTexture(capi);
@@ -61,7 +67,10 @@ public class FavoritedSlot
 
     public void Draw()
     {
-        if (favoriteIconTexture == null) return;
+        if (favoriteIconTexture == null)
+        {
+            return;
+        }
 
         var x = (float)Math.Round(bounds.renderX + marginLeft, MidpointRounding.AwayFromZero);
         var y = (float)Math.Round(bounds.renderY + marginTop, MidpointRounding.AwayFromZero);
@@ -95,18 +104,31 @@ public class GuiElementItemSlotGridPatch
     {
         var capi = GetApi(__instance);
         var favoritesManager = GetFavoritesManager(__instance, "PostfixRenderInteractiveElements");
-        if (HideFavorites && !(favoritesManager?.IsFavoriteModeActive ?? HideFavorites)) return;
-        if (favoritesManager == null) return;
+        if (HideFavorites && !(favoritesManager?.IsFavoriteModeActive ?? HideFavorites))
+        {
+            return;
+        }
+
+        if (favoritesManager == null)
+        {
+            return;
+        }
 
         var slotIndex = 0;
         var renderedSlots =
             (Vintagestory.API.Datastructures.OrderedDictionary<int, ItemSlot>)RenderedSlotsField.GetValue(__instance)!;
         foreach (var renderedSlot in renderedSlots)
         {
-            if (slotIndex >= __instance.SlotBounds.Length) break;
+            if (slotIndex >= __instance.SlotBounds.Length)
+            {
+                break;
+            }
 
             var value = renderedSlot.Value;
-            if (!(Util.IsPlayerBackpack(value.Inventory) || Util.IsPlayerHotbar(value.Inventory))) continue;
+            if (!(Util.IsPlayerBackpack(value.Inventory) || Util.IsPlayerHotbar(value.Inventory)))
+            {
+                continue;
+            }
 
             if (value.Itemstack != null && favoritesManager.IsFavorite(value.Itemstack))
             {
@@ -132,15 +154,27 @@ public class GuiElementItemSlotGridPatch
         bool altPressed)
     {
         var favoritesManager = GetFavoritesManager(__instance, "PrefixSlotClick");
-        if (favoritesManager is not { IsFavoriteModeActive: true }) return true;
+        if (favoritesManager is not { IsFavoriteModeActive: true })
+        {
+            return true;
+        }
 
         var inventory = (IInventory?)InventoryField.GetValue(__instance);
-        if (inventory == null || slotId < 0 || slotId >= inventory.Count) return true;
+        if (inventory == null || slotId < 0 || slotId >= inventory.Count)
+        {
+            return true;
+        }
 
-        if (!(Util.IsPlayerBackpack(inventory) || Util.IsPlayerHotbar(inventory))) return true;
+        if (!(Util.IsPlayerBackpack(inventory) || Util.IsPlayerHotbar(inventory)))
+        {
+            return true;
+        }
 
         var slot = inventory[slotId];
-        if (slot?.Itemstack == null) return false;
+        if (slot?.Itemstack == null)
+        {
+            return false;
+        }
 
         favoritesManager.ToggleFavorite(slot.Itemstack);
         api.Gui.PlaySound("tick");

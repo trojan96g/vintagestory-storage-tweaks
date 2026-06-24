@@ -35,6 +35,9 @@ public class ContainerActionButtons(ICoreClientAPI capi)
                     }), Lang.Get("storagetweaks:quick-store"));
         }
 
-        if (wasComposed) composer.Compose();
+        if (wasComposed)
+        {
+            composer.Compose();
+        }
     }
 }

@@ -104,7 +104,10 @@ public class StorageTweaksModSystem : ModSystem
     private static ILogger? logger;
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public static ILogger Logger() => logger!;
+    public static ILogger Logger()
+    {
+        return logger!;
+    }
 
     public override bool ShouldLoad(EnumAppSide forSide)
     {
@@ -181,13 +184,22 @@ public class StorageTweaksModSystem : ModSystem
     private static void OnPlayerJoin(IServerPlayer player)
     {
         var tree = player.Entity?.WatchedAttributes;
-        if (tree == null) return;
+        if (tree == null)
+        {
+            return;
+        }
 
         var favoritesAttr = tree.GetTreeAttribute(FavoritesManager.FavoritesKey);
-        if (favoritesAttr != null) return;
+        if (favoritesAttr != null)
+        {
+            return;
+        }
 
         favoritesAttr = new TreeAttribute();
-        foreach (var code in ToolAndFoodCodes) favoritesAttr.SetBool(code, true);
+        foreach (var code in ToolAndFoodCodes)
+        {
+            favoritesAttr.SetBool(code, true);
+        }
 
         tree[FavoritesManager.FavoritesKey] = favoritesAttr;
         tree.MarkPathDirty(FavoritesManager.FavoritesKey);
@@ -230,16 +242,25 @@ public class StorageTweaksModSystem : ModSystem
 
         foreach (var collectible in api.World.Items.Concat(api.World.Collectibles))
         {
-            if (collectible.Code == null) continue;
+            if (collectible.Code == null)
+            {
+                continue;
+            }
 
             var code = collectible.Code.ToString();
             var parts = code.Split(':', '-');
 
             // Check if any part matches a keyword
-            if (!keywords.Any(k => parts.Any(p => string.Equals(p, k, StringComparison.OrdinalIgnoreCase)))) continue;
+            if (!keywords.Any(k => parts.Any(p => string.Equals(p, k, StringComparison.OrdinalIgnoreCase))))
+            {
+                continue;
+            }
 
             // Exclude unwanted items
-            if (excludeKeywords.Any(k => code.Contains(k, StringComparison.OrdinalIgnoreCase))) continue;
+            if (excludeKeywords.Any(k => code.Contains(k, StringComparison.OrdinalIgnoreCase)))
+            {
+                continue;
+            }
 
 
             ToolAndFoodCodes.Add(code);
@@ -251,7 +272,10 @@ public class StorageTweaksModSystem : ModSystem
     private static void HandleUpdateFavorites(IServerPlayer fromPlayer, UpdateFavoritesPacket packet)
     {
         var tree = fromPlayer.Entity?.WatchedAttributes;
-        if (tree == null) return;
+        if (tree == null)
+        {
+            return;
+        }
 
         var favoritesAttr = tree.GetTreeAttribute(FavoritesManager.FavoritesKey);
 
@@ -262,8 +286,14 @@ public class StorageTweaksModSystem : ModSystem
         }
 
 
-        if (packet.IsFavorite) favoritesAttr.SetBool(packet.Code, packet.IsFavorite);
-        else favoritesAttr.RemoveAttribute(packet.Code);
+        if (packet.IsFavorite)
+        {
+            favoritesAttr.SetBool(packet.Code, packet.IsFavorite);
+        }
+        else
+        {
+            favoritesAttr.RemoveAttribute(packet.Code);
+        }
 
         tree.MarkPathDirty(FavoritesManager.FavoritesKey);
     }
@@ -306,8 +336,15 @@ public class StorageTweaksModSystem : ModSystem
         var existingCodes = new HashSet<string>();
         foreach (var destSlot in destInventory)
         {
-            if (destSlot.Empty) continue;
-            if (FavoritesManager.IsFavorite(fromPlayer, destSlot.Itemstack)) continue;
+            if (destSlot.Empty)
+            {
+                continue;
+            }
+
+            if (FavoritesManager.IsFavorite(fromPlayer, destSlot.Itemstack))
+            {
+                continue;
+            }
 
             existingCodes.Add(destSlot.Itemstack.Collectible.Code.ToString());
         }
@@ -333,9 +370,20 @@ public class StorageTweaksModSystem : ModSystem
         List<ItemSlot> ignoredSlots = [];
         foreach (var slot in sourceInventory)
         {
-            if (slot.Empty) continue;
-            if (!existingCodes.Contains(slot.Itemstack.Collectible.Code.ToString())) continue;
-            if (IsExcludedSlot(slot)) continue;
+            if (slot.Empty)
+            {
+                continue;
+            }
+
+            if (!existingCodes.Contains(slot.Itemstack.Collectible.Code.ToString()))
+            {
+                continue;
+            }
+
+            if (IsExcludedSlot(slot))
+            {
+                continue;
+            }
 
             ignoredSlots.Clear();
             var world = fromPlayer.Entity.World;
@@ -356,11 +404,13 @@ public class StorageTweaksModSystem : ModSystem
                         {
                             continue;
                         }
+
                         if (!destSlot.CanHold(slot))
                         {
                             fallbackIgnored.Add(destSlot);
                             continue;
                         }
+
                         var isFsSlot = destSlot.GetType().Name.StartsWith("ItemSlotFS"); //FoodStorage stack merge override
                         var fallbackPriority = isFsSlot ? EnumMergePriority.DirectMerge : mergePriority;
                         var fallbackOp = new ItemStackMoveOperation(world, EnumMouseButton.Left, 0,
@@ -379,6 +429,7 @@ public class StorageTweaksModSystem : ModSystem
                                 {
                                     slot.Itemstack = null;
                                 }
+
                                 destSlot.MarkDirty();
                                 slot.MarkDirty();
                             }
@@ -387,11 +438,13 @@ public class StorageTweaksModSystem : ModSystem
                                 fallbackIgnored.Add(destSlot);
                             }
                         }
+
                         if (slot.Empty)
                         {
                             break;
                         }
                     }
+
                     break;
                 }
 
@@ -400,6 +453,7 @@ public class StorageTweaksModSystem : ModSystem
                 {
                     break;
                 }
+
                 ignoredSlots.Add(suitedSlot.slot);
             }
         }
@@ -415,7 +469,10 @@ public class StorageTweaksModSystem : ModSystem
         try
         {
             config = api.LoadModConfig<StorageTweaksClientConfig>("storagetweaks.json");
-            if (config != null) return;
+            if (config != null)
+            {
+                return;
+            }
 
             config = new StorageTweaksClientConfig();
             api.StoreModConfig(config, "storagetweaks.json");
@@ -449,7 +506,10 @@ public class StorageTweaksModSystem : ModSystem
         api.Input.SetHotKeyHandler("storagetweaks.sort", _ =>
         {
             var inv = api.World.Player.InventoryManager.GetOwnInventory(GlobalConstants.backpackInvClassName);
-            if (inv == null) return false;
+            if (inv == null)
+            {
+                return false;
+            }
 
             PatchUtils.SendPacket(api, new SortInventoryPacket
             {
@@ -466,13 +526,23 @@ public class StorageTweaksModSystem : ModSystem
             foreach (var dialog in api.Gui.OpenedGuis)
             {
                 var composer = dialog.SingleComposer;
-                if (composer?.DialogName == null) continue;
+                if (composer?.DialogName == null)
+                {
+                    continue;
+                }
+
                 if (!GuiDialogBlockEntityInventoryPatch.DialogNamePrefixes.Any(prefix =>
-                        composer.DialogName.StartsWith(prefix, StringComparison.Ordinal))) continue;
+                        composer.DialogName.StartsWith(prefix, StringComparison.Ordinal)))
+                {
+                    continue;
+                }
 
                 var inv = PatchUtils.GetInventoryForComposer(composer);
 
-                if (inv == null) continue;
+                if (inv == null)
+                {
+                    continue;
+                }
 
                 PatchUtils.SendPacket(api, new SortInventoryPacket
                 {
@@ -499,6 +569,9 @@ public class StorageTweaksModSystem : ModSystem
     {
         harmony?.UnpatchAll("storagetweaks");
         capi?.StoreModConfig(GetClientConfig(), "storagetweaks.json");
-        if (sapi != null) sapi.Event.PlayerJoin -= OnPlayerJoin;
+        if (sapi != null)
+        {
+            sapi.Event.PlayerJoin -= OnPlayerJoin;
+        }
     }
 }

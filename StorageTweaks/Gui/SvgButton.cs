@@ -84,14 +84,19 @@ public class SvgButton(
             (float)Bounds.InnerWidth, (float)Bounds.InnerHeight);
 
         if (mouseOver)
+        {
             api.Render.Render2DTexture(hoverTexture.TextureId, (float)Bounds.absX, (float)Bounds.absY,
                 (float)Bounds.InnerWidth, (float)Bounds.InnerHeight);
+        }
     }
 
     public override void OnMouseDownOnElement(ICoreClientAPI capi, MouseEvent args)
     {
         base.OnMouseDownOnElement(capi, args);
-        if (!onClick()) return;
+        if (!onClick())
+        {
+            return;
+        }
 
         capi.Gui.PlaySound("tick");
     }

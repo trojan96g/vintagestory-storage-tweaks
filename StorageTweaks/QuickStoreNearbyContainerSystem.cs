@@ -120,7 +120,7 @@ public static class QuickStoreNearbyContainerSystem
 
         // Food Shelves mod — barrel/tun racks
         ("barrelrack", "barrelrack"),
-        ("tunrack", "tunrack"),
+        ("tunrack", "tunrack")
     ];
 
     private static List<BlockEntityContainer> GetNearbyContainers(IWorldAccessor world, BlockPos position,
@@ -146,7 +146,11 @@ public static class QuickStoreNearbyContainerSystem
                 return;
             }
 
-            if (be is not BlockEntityContainer bc) return;
+            if (be is not BlockEntityContainer bc)
+            {
+                return;
+            }
+
             if (!QuickStackChestTypes.Contains((bc.InventoryClassName,
                     bc.Block.Code.FirstCodePart())))
             {
