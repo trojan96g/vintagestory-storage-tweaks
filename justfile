@@ -1,11 +1,10 @@
 download-deps:
     #!/usr/bin/env bash
-    OVERHAULLIB_VER=1.21.0
-    mkdir -p lib/overhaullib
-    cd lib/overhaullib
-    curl -LO https://mods.vintagestory.at/download/78190/overhaullib_$OVERHAULLIB_VER.zip
-    unzip overhaullib_$OVERHAULLIB_VER.zip
-    rm overhaullib_$OVERHAULLIB_VER.zip
+    mkdir -p lib/configlib
+    cd lib/configlib
+    curl -Lo configlib.zip "https://mods.vintagestory.at/download/73792/configlib_1.10.14.zip"
+    unzip configlib.zip
+    rm configlib.zip
     cd -
 
 download-vs-1_22:

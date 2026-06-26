@@ -9,6 +9,9 @@ on:
   pull_request:
     branches: [ "master" ]
 
+env:
+  CONFIGLIB_DOWNLOAD_URL: "https://mods.vintagestory.at/download/73792/configlib_1.10.14.zip"
+
 jobs:
   build:
 
@@ -16,6 +19,23 @@ jobs:
 
     steps:
     - uses: actions/checkout@v6
+    
+    - name: Cache Config lib
+      uses: actions/cache@v5
+      id: cache-configlib
+      with:
+        path: lib/configlib
+        key: configlib-${{ env.CONFIGLIB_DOWNLOAD_URL }}
+    
+    - name: Download & extract Config lib
+      if: steps.cache-configlib.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p lib/configlib
+        cd lib/configlib
+        curl -Lo configlib.zip "${{ env.CONFIGLIB_DOWNLOAD_URL }}"
+        unzip configlib.zip
+        rm configlib.zip
+        cd -
 
     - name: Cache Vintage Story
       uses: actions/cache@v5

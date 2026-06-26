@@ -1,0 +1,28 @@
+{
+  "version": 0,
+  "file": "storagetweaks.json",
+
+  "settings": [
+    { "code": "HideFavorites", "type": "boolean", "default": false },
+    { "code": "StackPerishables", "type": "boolean", "default": false },
+    { "code": "SortHotbarWithBackpack", "type": "boolean", "default": false },
+    { "code": "HideSortButton", "type": "boolean", "default": false },
+    { "code": "HideStoreNearbyButton", "type": "boolean", "default": false },
+    { "code": "HideStackPerishablesButton", "type": "boolean", "default": false },
+    { "code": "HideQuickStoreButton", "type": "boolean", "default": false }
+  ],
+
+  "patches": {
+    "bool": {
+      "storagetweaks.json": {
+        "HideFavorites": "value",
+        "StackPerishables": "value",
+        "SortHotbarWithBackpack": "value",
+        "HideSortButton": "value",
+        "HideStoreNearbyButton": "value",
+        "HideStackPerishablesButton": "value",
+        "HideQuickStoreButton": "value"
+      }
+    }
+  }
+}

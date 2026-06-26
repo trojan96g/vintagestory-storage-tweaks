@@ -121,4 +121,16 @@ public class GuiDialogInventoryPatch
         var field = dialog.GetType().GetField("survivalInvDialog", BindingFlags.NonPublic | BindingFlags.Instance)!;
         return (GuiComposer?)field.GetValue(dialog);
     }
+
+    public static void Reload(ICoreClientAPI api)
+    {
+        var dialog = api.Gui.OpenedGuis.Find(d => d.Composers.Values.Any(c => c.DialogName == "inventory-backpack"));
+
+        if (dialog is not GuiDialogInventory dialogInventory)
+        {
+            return;
+        }
+
+        dialogInventory.ComposeGui(false);
+    }
 }

@@ -155,6 +155,11 @@ public class StorageTweaksModSystem : ModSystem
         capi.Logger.VerboseDebug("[StorageTweaks] Completed harmony patches");
 
         RegisterHotkeys(api);
+        
+        if (api.ModLoader.IsModEnabled("configlib"))
+        {
+            SubscribeToConfigChange(api);
+        }
 
         capi.Logger.VerboseDebug("[StorageTweaks] Started StorageTweaksModSystem client side");
     }
@@ -569,6 +574,22 @@ public class StorageTweaksModSystem : ModSystem
             });
             return true;
         });
+    }
+    
+    private static void SubscribeToConfigChange(ICoreClientAPI api)
+    {
+        var system = api.ModLoader.GetModSystem<ConfigLib.ConfigLibModSystem>();
+
+        system.SettingChanged += (domain, _, setting) =>
+        {
+            if (domain != "storagetweaks") return;
+            setting.AssignSettingValue(config);
+            GuiDialogInventoryPatch.Reload(api);
+        };
+        system.ConfigsLoaded += () =>
+        {
+            system.GetConfig("storagetweaks")?.AssignSettingsValues(config);
+        };
     }
 
     public override void Dispose()
