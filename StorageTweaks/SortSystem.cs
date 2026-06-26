@@ -28,7 +28,7 @@ public static class SortSystem
         // Clone inventory for rollback on failure
         var snapshot = inventory.Select(s => s.Itemstack?.Clone()).ToList();
 
-        var result = SortInventoryInternal(fromPlayer, inventory, packet.StackPerishables);
+        var result = SortInventoryInternal(fromPlayer, inventory, packet);
         if (result is not SortError sortError)
         {
             return;
@@ -60,18 +60,18 @@ public static class SortSystem
     }
 
     private static SortResult SortInventoryInternal(IServerPlayer fromPlayer, IInventory inventory,
-        bool stackPerishables)
+        SortInventoryPacket packet)
     {
         var world = fromPlayer.Entity.World;
         // we should probably add checks if the player is allowed to access the inventory
 
-        var mergePriority = stackPerishables ? EnumMergePriority.DirectMerge : EnumMergePriority.AutoMerge;
+        var mergePriority = packet.StackPerishables ? EnumMergePriority.DirectMerge : EnumMergePriority.AutoMerge;
 
         // if sorting player backpack also include none favorite slots from hotbar in sorting
         var hotbarSlots = new List<ItemSlot>();
         var isPlayerBackpack = inventory.ClassName == GlobalConstants.backpackInvClassName;
         var hotbar = fromPlayer.InventoryManager.GetHotbarInventory();
-        if (isPlayerBackpack)
+        if (isPlayerBackpack && packet.SortHotbarWithBackpack)
         {
             hotbarSlots = [.. hotbar.Where(s => s.Empty || !FavoritesManager.IsFavorite(fromPlayer, s.Itemstack))];
         }

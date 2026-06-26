@@ -35,7 +35,8 @@ public class InventoryActionButtons
                 inventory => PatchUtils.SendPacket(capi, new SortInventoryPacket
                 {
                     InventoryId = inventory.InventoryID,
-                    StackPerishables = config.StackPerishables
+                    StackPerishables = config.StackPerishables,
+                    SortHotbarWithBackpack = config.SortHotbarWithBackpack
                 }),
                 Lang.Get("storagetweaks:compact-and-sort"));
             buttonIndex++;

@@ -19,6 +19,8 @@ public class SortInventoryPacket
 {
     [ProtoMember(1)] public required string InventoryId;
 
+    [ProtoMember(3)] public bool SortHotbarWithBackpack = false;
+
     [ProtoMember(2)] public bool StackPerishables;
 }
 
@@ -56,6 +58,10 @@ public class StorageTweaksClientConfig
     /// the vanilla behavior of not auto-merging differently-perished stacks.
     public bool StackPerishables { get; set; }
 
+    /// When true, the sort button in the backpack (player inventory) will also sort
+    /// items in the hotbar alongside the backpack slots
+    public bool SortHotbarWithBackpack { get; set; }
+
     /// When true, the sort & compact button is hidden in inventory and container GUIs.
     /// Sorting via hotkey still works.
     public bool HideSortButton { get; set; }
@@ -76,10 +82,6 @@ public class StorageTweaksClientConfig
 // ReSharper disable once ClassNeverInstantiated.Global
 public class StorageTweaksModSystem : ModSystem
 {
-    public InventoryActionButtons? InventoryActionButtons;
-    public ContainerActionButtons? ContainerActionButtons;
-    public FavoritesManager? FavoritesManager;
-
     private static readonly string[] SlotTypes =
     [
         "ItemSlotSurvival",
@@ -98,10 +100,14 @@ public class StorageTweaksModSystem : ModSystem
     // ReSharper disable once MemberCanBePrivate.Global
     public static readonly List<string> ToolAndFoodCodes = [];
 
+    private static ILogger? logger;
+    public ContainerActionButtons? ContainerActionButtons;
+    public FavoritesManager? FavoritesManager;
+    public InventoryActionButtons? InventoryActionButtons;
+
     private ICoreClientAPI? capi;
     private Harmony? harmony;
     private ICoreServerAPI? sapi;
-    private static ILogger? logger;
 
     // ReSharper disable once MemberCanBePrivate.Global
     public static ILogger Logger()
