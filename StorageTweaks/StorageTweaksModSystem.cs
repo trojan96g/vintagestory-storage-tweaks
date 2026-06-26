@@ -420,11 +420,11 @@ public class StorageTweaksModSystem : ModSystem
                         {
                             var room = destSlot.MaxSlotStackSize - (destSlot.Itemstack?.StackSize ?? 0);
                             if (room > 0 && !destSlot.Empty &&
-                                destSlot.Itemstack.Equals(world, slot.Itemstack, GlobalConstants.IgnoredStackAttributes))
+                                destSlot.Itemstack!.Equals(world, slot.Itemstack, GlobalConstants.IgnoredStackAttributes))
                             {
                                 var toMove = Math.Min(slot.StackSize, room);
                                 destSlot.Itemstack.StackSize += toMove;
-                                slot.Itemstack.StackSize -= toMove;
+                                slot.Itemstack!.StackSize -= toMove;
                                 if (slot.Itemstack.StackSize <= 0)
                                 {
                                     slot.Itemstack = null;
