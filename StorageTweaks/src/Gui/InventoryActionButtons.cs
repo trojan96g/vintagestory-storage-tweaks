@@ -8,9 +8,9 @@ namespace StorageTweaks.Gui;
 
 public class InventoryActionButtons
 {
-    private SvgToggleButton? favoriteToggleButton;
-    private readonly StorageTweaksModSystem? modSystem;
     private readonly ICoreClientAPI capi;
+    private readonly StorageTweaksModSystem? modSystem;
+    private SvgToggleButton? favoriteToggleButton;
 
     public InventoryActionButtons(ICoreClientAPI capi)
     {
@@ -36,7 +36,7 @@ public class InventoryActionButtons
                 {
                     InventoryId = inventory.InventoryID,
                     StackPerishables = config.StackPerishables,
-                    SortHotbarWithBackpack = config.SortHotbarWithBackpack
+                    SortHotbarWithBackpack = config.SortHotbarWithBackpack,
                 }),
                 Lang.Get("storagetweaks:compact-and-sort"));
             buttonIndex++;
@@ -48,7 +48,7 @@ public class InventoryActionButtons
             PatchUtils.AddButton(invComposer, "store-nearby", -60 - buttonIndex * 26,
                 _ => PatchUtils.SendPacket(capi, new QuickStoreNearbyContainersPacket
                 {
-                    StackPerishables = config.StackPerishables
+                    StackPerishables = config.StackPerishables,
                 }),
                 Lang.Get("storagetweaks:store-nearby"));
             buttonIndex++;

@@ -4,13 +4,22 @@
 # Microsoft .NET properties
 csharp_new_line_before_members_in_object_initializers = false
 csharp_preferred_modifier_order = public, required, protected, internal, file, new, private, override, virtual, closed, sealed, abstract, static, extern, unsafe, volatile, async, readonly:suggestion
+csharp_preserve_single_line_blocks = true
+csharp_prefer_braces = true
+csharp_insert_final_newline = true
 
 # ReSharper properties
 resharper_accessor_owner_body = accessors_with_expression_body
+resharper_blank_lines_after_control_transfer_statements = 0
+resharper_braces_for_for = required
+resharper_braces_for_foreach = required
+resharper_braces_for_ifelse = required
+resharper_braces_for_while = required
 resharper_braces_redundant = false
-csharp_prefer_braces = true
+resharper_csharp_keep_existing_enum_arrangement = false
 resharper_csharp_max_line_length = 185
-resharper_instance_members_qualify_declared_in = 
+resharper_keep_existing_declaration_block_arrangement = false
+resharper_trailing_comma_in_multiline_lists = true
 resharper_parentheses_redundancy_style = remove
 resharper_place_expr_accessor_on_single_line = true
 resharper_place_expr_method_on_single_line = true

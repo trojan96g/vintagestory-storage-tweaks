@@ -8,6 +8,7 @@ using Cairo;
 using HarmonyLib;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 
 namespace StorageTweaks.Patches;
@@ -18,10 +19,10 @@ namespace StorageTweaks.Patches;
 public class FavoritedSlot
 {
     private static LoadedTexture? favoriteIconTexture;
-    private readonly ICoreClientAPI capi;
     private static readonly int FavoriteSlotCornerColor = ColorUtil.ColorFromRgba(250, 230, 51, 180);
 
     private readonly ElementBounds bounds;
+    private readonly ICoreClientAPI capi;
     private readonly float iconSize;
     private readonly float marginLeft;
     private readonly float marginTop;
@@ -116,7 +117,7 @@ public class GuiElementItemSlotGridPatch
 
         var slotIndex = 0;
         var renderedSlots =
-            (Vintagestory.API.Datastructures.OrderedDictionary<int, ItemSlot>)RenderedSlotsField.GetValue(__instance)!;
+            (OrderedDictionary<int, ItemSlot>)RenderedSlotsField.GetValue(__instance)!;
         foreach (var renderedSlot in renderedSlots)
         {
             if (slotIndex >= __instance.SlotBounds.Length)

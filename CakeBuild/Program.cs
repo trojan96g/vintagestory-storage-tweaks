@@ -49,10 +49,14 @@ public sealed class ValidateJsonTask : FrostingTask<BuildContext>
 {
     public override void Run(BuildContext context)
     {
-        if (context.SkipJsonValidation) return;
+        if (context.SkipJsonValidation)
+        {
+            return;
+        }
 
         var jsonFiles = context.GetFiles($"../{BuildContext.ProjectName}/assets/**/*.json");
         foreach (var file in jsonFiles)
+        {
             try
             {
                 var json = File.ReadAllText(file.FullPath);
@@ -63,6 +67,7 @@ public sealed class ValidateJsonTask : FrostingTask<BuildContext>
                 throw new Exception(
                     $"Validation failed for JSON file: {file.FullPath}{Environment.NewLine}{ex.Message}", ex);
             }
+        }
     }
 }
 
@@ -75,14 +80,14 @@ public sealed class BuildTask : FrostingTask<BuildContext>
         context.DotNetClean($"../{BuildContext.ProjectName}/{BuildContext.ProjectName}.csproj",
             new DotNetCleanSettings
             {
-                Configuration = context.BuildConfiguration
+                Configuration = context.BuildConfiguration,
             });
 
 
         context.DotNetPublish($"../{BuildContext.ProjectName}/{BuildContext.ProjectName}.csproj",
             new DotNetPublishSettings
             {
-                Configuration = context.BuildConfiguration
+                Configuration = context.BuildConfiguration,
             });
     }
 }
@@ -99,11 +104,15 @@ public sealed class PackageTask : FrostingTask<BuildContext>
         context.CopyFiles($"../{BuildContext.ProjectName}/bin/{context.BuildConfiguration}/Mods/mod/publish/*",
             $"../Releases/{context.Name}");
         if (context.DirectoryExists($"../{BuildContext.ProjectName}/assets"))
+        {
             context.CopyDirectory($"../{BuildContext.ProjectName}/assets", $"../Releases/{context.Name}/assets");
+        }
 
         context.CopyFile($"../{BuildContext.ProjectName}/modinfo.json", $"../Releases/{context.Name}/modinfo.json");
         if (context.FileExists($"../{BuildContext.ProjectName}/modicon.png"))
+        {
             context.CopyFile($"../{BuildContext.ProjectName}/modicon.png", $"../Releases/{context.Name}/modicon.png");
+        }
 
         context.Zip($"../Releases/{context.Name}", $"../Releases/{context.Name}_{context.Version}.zip");
     }

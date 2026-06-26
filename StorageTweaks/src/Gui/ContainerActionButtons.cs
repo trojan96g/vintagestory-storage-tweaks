@@ -19,7 +19,7 @@ public class ContainerActionButtons(ICoreClientAPI capi)
                 inventory => PatchUtils.SendPacket(capi, new SortInventoryPacket
                 {
                     InventoryId = inventory.InventoryID,
-                    StackPerishables = config.StackPerishables
+                    StackPerishables = config.StackPerishables,
                 }), Lang.Get("storagetweaks:compact-and-sort"));
             buttonIndex++;
         }
@@ -31,7 +31,7 @@ public class ContainerActionButtons(ICoreClientAPI capi)
                     PatchUtils.SendPacket(capi, new UnloadInventoryPacket
                     {
                         InventoryId = inventory.InventoryID,
-                        StackPerishables = config.StackPerishables
+                        StackPerishables = config.StackPerishables,
                     }), Lang.Get("storagetweaks:quick-store"));
         }
 

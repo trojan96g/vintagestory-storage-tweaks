@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using ConfigLib;
 using HarmonyLib;
 using ProtoBuf;
 using StorageTweaks.Gui;
@@ -91,7 +92,7 @@ public class StorageTweaksModSystem : ModSystem
         // for https://mods.vintagestory.at/playerinventorylib used by backpacks mod in 1.22+
         "BackpackSlot",
         // for https://mods.vintagestory.at/playerinventorylib without the Backpacks mod
-        "VanillaBagContentSlot"
+        "VanillaBagContentSlot",
     ];
 
     private static StorageTweaksClientConfig config = new();
@@ -155,7 +156,7 @@ public class StorageTweaksModSystem : ModSystem
         capi.Logger.VerboseDebug("[StorageTweaks] Completed harmony patches");
 
         RegisterHotkeys(api);
-        
+
         if (api.ModLoader.IsModEnabled("configlib"))
         {
             SubscribeToConfigChange(api);
@@ -244,11 +245,11 @@ public class StorageTweaksModSystem : ModSystem
             "shovel",
             "spear",
             "sword",
-            "torch"
+            "torch",
         };
         var excludeKeywords = new[]
         {
-            "blade", "part", "raw", "stackrandomizer", "toolmold", "-down", "-north", "-east", "-south", "-west"
+            "blade", "part", "raw", "stackrandomizer", "toolmold", "-down", "-north", "-east", "-south", "-west",
         };
 
         foreach (var collectible in api.World.Items.Concat(api.World.Collectibles))
@@ -525,7 +526,7 @@ public class StorageTweaksModSystem : ModSystem
             PatchUtils.SendPacket(api, new SortInventoryPacket
             {
                 InventoryId = inv.InventoryID,
-                StackPerishables = GetClientConfig().StackPerishables
+                StackPerishables = GetClientConfig().StackPerishables,
             });
             return true;
         });
@@ -558,7 +559,7 @@ public class StorageTweaksModSystem : ModSystem
                 PatchUtils.SendPacket(api, new SortInventoryPacket
                 {
                     InventoryId = inv.InventoryID,
-                    StackPerishables = stackPerishables
+                    StackPerishables = stackPerishables,
                 });
                 count += 1;
             }
@@ -570,19 +571,23 @@ public class StorageTweaksModSystem : ModSystem
         {
             PatchUtils.SendPacket(api, new QuickStoreNearbyContainersPacket
             {
-                StackPerishables = GetClientConfig().StackPerishables
+                StackPerishables = GetClientConfig().StackPerishables,
             });
             return true;
         });
     }
-    
+
     private static void SubscribeToConfigChange(ICoreClientAPI api)
     {
-        var system = api.ModLoader.GetModSystem<ConfigLib.ConfigLibModSystem>();
+        var system = api.ModLoader.GetModSystem<ConfigLibModSystem>();
 
         system.SettingChanged += (domain, _, setting) =>
         {
-            if (domain != "storagetweaks") return;
+            if (domain != "storagetweaks")
+            {
+                return;
+            }
+
             setting.AssignSettingValue(config);
             GuiDialogInventoryPatch.Reload(api);
         };

@@ -123,7 +123,7 @@ public static class QuickStoreNearbyContainerSystem
         ("tunrack", "tunrack"),
 
         // Upgradeable Storage - Labeled Storage Vessels (all color variants)
-        ("chest", "generic")
+        ("chest", "generic"),
     ];
 
     private static List<BlockEntityContainer> GetNearbyContainers(IWorldAccessor world, BlockPos position,

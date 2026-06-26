@@ -72,7 +72,7 @@ public static class PatchUtils
             GuiDialogBlockEntityInventory inventoryDialog => inventoryDialog.Inventory,
             GuiDialogCreatureContents creatureContents => (InventoryGeneric?)GuiDialogCreatureContentsInv.GetValue(
                 creatureContents),
-            _ => null
+            _ => null,
         };
     }
 

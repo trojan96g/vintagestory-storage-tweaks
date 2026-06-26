@@ -46,14 +46,14 @@ public class GuiDialogInventoryPatch
     }
 
     /// <summary>
-    /// A fallback patch in case AddDialogTitleBar doesn't get run. For some reason with the
-    /// Improved Handbook Recipe Helper mod my AddDialogTitleBar never gets called.
-    /// But as soon as I add a patch for ComposeSurvivalInvDialog it does get run meaning I would be adding the buttons
-    /// twice accept that I have a check to prevent it. I don't understand all this patching stuff, but I'll keep this
-    /// one as a fallback just in case AddDialogTitleBar doesn't get run. However, this postfix patch will never run
-    /// with the Backpacks mod since it uses GuiDialogSurvivalInventory from the playerinventorylib mod. As far as I know
-    /// the handbook recipe helper mod does not patch anything in playerinventorylib meaning AddDialogTitleBar patch
-    /// is uneffected and should work just fine with playerinventorylib/Backpacks mod.
+    ///     A fallback patch in case AddDialogTitleBar doesn't get run. For some reason with the
+    ///     Improved Handbook Recipe Helper mod my AddDialogTitleBar never gets called.
+    ///     But as soon as I add a patch for ComposeSurvivalInvDialog it does get run meaning I would be adding the buttons
+    ///     twice accept that I have a check to prevent it. I don't understand all this patching stuff, but I'll keep this
+    ///     one as a fallback just in case AddDialogTitleBar doesn't get run. However, this postfix patch will never run
+    ///     with the Backpacks mod since it uses GuiDialogSurvivalInventory from the playerinventorylib mod. As far as I know
+    ///     the handbook recipe helper mod does not patch anything in playerinventorylib meaning AddDialogTitleBar patch
+    ///     is uneffected and should work just fine with playerinventorylib/Backpacks mod.
     /// </summary>
     /// <param name="__instance"></param>
     [HarmonyPatch(typeof(GuiDialogInventory), "ComposeSurvivalInvDialog")]
@@ -73,7 +73,7 @@ public class GuiDialogInventoryPatch
         var storageTweaksKeys = new[]
         {
             "storagetweaks-sort", "storagetweaks-store-nearby", "storagetweaks-favorite",
-            "storagetweaks-stack-perishables"
+            "storagetweaks-stack-perishables",
         };
         if (storageTweaksKeys.Any(key => composer[key] != null))
         {
