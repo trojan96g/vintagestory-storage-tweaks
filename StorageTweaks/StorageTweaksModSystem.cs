@@ -386,7 +386,7 @@ public class StorageTweaksModSystem : ModSystem
                 continue;
             }
 
-            if (!existingCodes.Contains(slot.Itemstack.Collectible.Code.ToString()))
+            if (!existingCodes.Contains(slot.Itemstack!.Collectible.Code.ToString()))
             {
                 continue;
             }
