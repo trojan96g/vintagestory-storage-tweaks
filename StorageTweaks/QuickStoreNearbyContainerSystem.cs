@@ -39,7 +39,7 @@ public static class QuickStoreNearbyContainerSystem
         ("bettercrate", "bettercrate2sided"),
         ("bettercrate", "bettercrate"),
 
-        // Extra Chests mod
+        // Extra Chests mod and Upgradeable Storage mod
         ("chest", "blackbronze"),
         ("chest", "iron"),
         ("chest", "bismuthbronze"),
@@ -84,7 +84,7 @@ public static class QuickStoreNearbyContainerSystem
         ("spearrack", "spearrack"),
         ("glidermount", "glidermount"),
 
-        // Food Shelves mod — shelves & display
+        // Food Shelves mod - shelves & display
         ("doubleshelf", "doubleshelf"),
         ("breadshelf", "breadshelf"),
         ("barshelf", "barshelf"),
@@ -97,7 +97,7 @@ public static class QuickStoreNearbyContainerSystem
         ("fooddisplayblock", "fooddisplayblock"),
         ("pumpkincase", "pumpkincase"),
 
-        // Food Shelves mod — specialty storage
+        // Food Shelves mod - specialty storage
         ("floursack", "floursack"),
         ("jar", "jar"),
         ("jarlarge", "jarlarge"),
@@ -106,21 +106,24 @@ public static class QuickStoreNearbyContainerSystem
         ("seedbins", "seedbins"),
         ("buckethook", "buckethook"),
 
-        // Food Shelves mod — coolers
+        // Food Shelves mod - coolers
         ("coolingcabinet", "coolingcabinet"),
         ("meatfreezer", "meatfreezer"),
         ("fruitcooler", "fruitcooler"),
         ("wallcabinet", "wallcabinet"),
 
-        // Food Shelves mod — baskets
+        // Food Shelves mod - baskets
         ("fruitbasket", "fruitbasket"),
         ("vegetablebasket", "vegetablebasket"),
         ("eggbasket", "eggbasket"),
         ("mushroombasket", "mushroombasket"),
 
-        // Food Shelves mod — barrel/tun racks
+        // Food Shelves mod - barrel/tun racks
         ("barrelrack", "barrelrack"),
-        ("tunrack", "tunrack")
+        ("tunrack", "tunrack"),
+
+        // Upgradeable Storage - Labeled Storage Vessels (all color variants)
+        ("chest", "generic")
     ];
 
     private static List<BlockEntityContainer> GetNearbyContainers(IWorldAccessor world, BlockPos position,
@@ -189,7 +192,7 @@ public static class QuickStoreNearbyContainerSystem
         foreach (var container in nearbyContainers)
         {
             StorageTweaksModSystem.UnloadInventory(fromPlayer, container.Inventory, packet.StackPerishables);
-            // MarkDirty(true) forces mesh re-tessellation on clients — required for BlockEntityDisplay
+            // MarkDirty(true) forces mesh re-tessellation on clients - required for BlockEntityDisplay
             // subclasses (FoodShelves, Purposeful Storage) that render their contents in the world.
             container.MarkDirty(true);
         }
