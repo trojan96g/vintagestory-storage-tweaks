@@ -353,6 +353,8 @@ public class StorageTweaksModSystem : ModSystem
                 continue;
             }
 
+            if (destSlot.Itemstack == null) continue;
+
             // try catching here because one user got a null reference exception
             // no idea how because destSlot.Empty above should ensure that Itemstack is not null
             // https://mods.vintagestory.at/storagetweaks#cmt-193057
