@@ -353,8 +353,20 @@ public class StorageTweaksModSystem : ModSystem
                 continue;
             }
 
-            if (FavoritesManager.IsFavorite(fromPlayer, destSlot.Itemstack))
+            // try catching here because one user got a null reference exception
+            // no idea how because destSlot.Empty above should ensure that Itemstack is not null
+            // https://mods.vintagestory.at/storagetweaks#cmt-193057
+            try
             {
+                if (FavoritesManager.IsFavorite(fromPlayer, destSlot.Itemstack))
+                {
+                    continue;
+                }
+            }
+            catch (Exception e)
+            {
+                Logger().Error("[StorageTweaks] IsFavorite threw exception with item stack: {0}, {1}", destSlot.Itemstack, destSlot.Itemstack?.Collectible);
+                Logger().Error("[StorageTweaks] HandleUnloadInventory: Exception {0}", e);
                 continue;
             }
 
