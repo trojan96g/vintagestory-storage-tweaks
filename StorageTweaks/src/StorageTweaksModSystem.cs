@@ -79,6 +79,13 @@ public class StorageTweaksClientConfig
     public bool HideQuickStoreButton { get; set; }
 }
 
+public class StorageTweaksServerConfig
+{
+    /// The search radius (in blocks) used when quick storing nearby containers.
+    /// The search area is a cube of (2*radius+1)^3 blocks centered on the player.
+    public int QuickStoreNearbySearchRadius { get; set; } = 8;
+}
+
 // ReSharper disable once UnusedType.Global
 // ReSharper disable once ClassNeverInstantiated.Global
 public class StorageTweaksModSystem : ModSystem
@@ -99,6 +106,7 @@ public class StorageTweaksModSystem : ModSystem
     ];
 
     private static StorageTweaksClientConfig config = new();
+    private static StorageTweaksServerConfig serverConfig = new();
 
     /// A list of quality foods and tools to exclude from automatic unloading
     // ReSharper disable once MemberCanBePrivate.Global
@@ -173,6 +181,7 @@ public class StorageTweaksModSystem : ModSystem
     {
         sapi = api;
         sapi.Logger.VerboseDebug("[StorageTweaks] Starting StorageTweaksModSystem server side");
+        LoadServerConfig(api);
         api.Network.RegisterChannel("storagetweaks")
             .RegisterMessageType<SortInventoryPacket>()
             .RegisterMessageType<UnloadInventoryPacket>()
@@ -523,9 +532,34 @@ public class StorageTweaksModSystem : ModSystem
         }
     }
 
+    private static void LoadServerConfig(ICoreServerAPI api)
+    {
+        try
+        {
+            serverConfig = api.LoadModConfig<StorageTweaksServerConfig>("storagetweaks-server.json");
+            if (serverConfig != null)
+            {
+                return;
+            }
+
+            serverConfig = new StorageTweaksServerConfig();
+            api.StoreModConfig(serverConfig, "storagetweaks-server.json");
+        }
+        catch (Exception)
+        {
+            serverConfig = new StorageTweaksServerConfig();
+            api.StoreModConfig(serverConfig, "storagetweaks-server.json");
+        }
+    }
+
     public static StorageTweaksClientConfig GetClientConfig()
     {
         return config;
+    }
+
+    public static StorageTweaksServerConfig GetServerConfig()
+    {
+        return serverConfig;
     }
 
     private static void RegisterHotkeys(ICoreClientAPI api)
@@ -628,6 +662,7 @@ public class StorageTweaksModSystem : ModSystem
     {
         harmony?.UnpatchAll("storagetweaks");
         capi?.StoreModConfig(GetClientConfig(), "storagetweaks.json");
+        sapi?.StoreModConfig(GetServerConfig(), "storagetweaks-server.json");
         if (sapi != null)
         {
             sapi.Event.PlayerJoin -= OnPlayerJoin;
