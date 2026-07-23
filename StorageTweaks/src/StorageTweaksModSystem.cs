@@ -96,6 +96,8 @@ public class StorageTweaksModSystem : ModSystem
         // for https://mods.vintagestory.at/moreinventorys crates/baskets use these slots
         "ItemSlotDynamic",
         "StandardSlot",
+        // for https://mods.vintagestory.at/modularbackpacks
+        "ItemSlotToolBagContent",
     ];
 
     private static StorageTweaksClientConfig config = new();
