@@ -37,6 +37,7 @@ public class InventoryActionButtons
                     InventoryId = inventory.InventoryID,
                     StackPerishables = config.StackPerishables,
                     SortHotbarWithBackpack = config.SortHotbarWithBackpack,
+                    SkipFavoritesWhenSorting = config.SkipFavoritesWhenSorting,
                 }),
                 Lang.Get("storagetweaks:compact-and-sort"));
             buttonIndex++;

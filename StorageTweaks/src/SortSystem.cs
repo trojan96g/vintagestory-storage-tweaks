@@ -107,7 +107,33 @@ public static class SortSystem
         // Excludes specialized bag slots from sorting,
         // for example, Quivers And Sheaths item slots
         // Examples: ItemSlotBagContentWithWildcardMatch, ItemSlotTakeOutOnly
-        slots = [.. slots.Where(slot => !StorageTweaksModSystem.IsExcludedSlot(slot) && !slot.Empty)];
+        slots = [.. slots.Where(slot =>
+        {
+            if (StorageTweaksModSystem.IsExcludedSlot(slot) || slot.Empty)
+            {
+                return false;
+            }
+
+            if (!packet.SkipFavoritesWhenSorting)
+            {
+                return true;
+            }
+
+            try
+            {
+                if (FavoritesManager.IsFavorite(fromPlayer, slot.Itemstack))
+                {
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                world.Logger.Error("[StorageTweaks] IsFavorite threw exception with item stack: {0}, {1}", slot.Itemstack, slot.Itemstack?.Collectible);
+                world.Logger.Error("[StorageTweaks] SortInventoryInternal: Exception {0}", e);
+            }
+
+            return true;
+        })];
 
         try
         {
