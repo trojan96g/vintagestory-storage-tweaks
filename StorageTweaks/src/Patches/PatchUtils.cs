@@ -70,6 +70,7 @@ public static class PatchUtils
         return dialog switch
         {
             GuiDialogBlockEntityInventory inventoryDialog => inventoryDialog.Inventory,
+            GuiDialogBlockEntity baseDialog => baseDialog.Inventory,
             GuiDialogCreatureContents creatureContents => (InventoryGeneric?)GuiDialogCreatureContentsInv.GetValue(
                 creatureContents),
             _ => null,
