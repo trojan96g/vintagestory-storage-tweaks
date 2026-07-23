@@ -89,6 +89,13 @@ public class StorageTweaksServerConfig
     /// The search radius (in blocks) used when quick storing nearby containers.
     /// The search area is a cube of (2*radius+1)^3 blocks centered on the player.
     public int QuickStoreNearbySearchRadius { get; set; } = 8;
+
+    /// Additional container patterns merged with the built-in whitelist for quick storing nearby.
+    public List<string> AdditionalContainerWhitelist { get; set; } = [];
+
+    /// Container patterns that are never considered by quick store nearby, even when matched by the
+    /// built-in or additional whitelist.
+    public List<string> ContainerBlacklist { get; set; } = [];
 }
 
 // ReSharper disable once UnusedType.Global

@@ -8,5 +8,6 @@
   "hotkey-sort-inventory": "Отсортировать инвентарь",
   "hotkey-sort-container": "Отсортировать открытые контейнеры",
   "hotkey-store-nearby": "Быстро выложить в ближайшие контейнеры",
+  "game:tabname-storage-containers": "Контейнеры",
   "game:item-hoovedwearables-lowerbackside-saddlebags2": "Седельные сумки"
 }
