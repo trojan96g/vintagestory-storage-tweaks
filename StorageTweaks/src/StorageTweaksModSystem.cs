@@ -93,6 +93,9 @@ public class StorageTweaksModSystem : ModSystem
         "BackpackSlot",
         // for https://mods.vintagestory.at/playerinventorylib without the Backpacks mod
         "VanillaBagContentSlot",
+        // for https://mods.vintagestory.at/moreinventorys crates/baskets use these slots
+        "ItemSlotDynamic",
+        "StandardSlot",
     ];
 
     private static StorageTweaksClientConfig config = new();
@@ -488,7 +491,16 @@ public class StorageTweaksModSystem : ModSystem
 
     public static bool IsExcludedSlot(ItemSlot slot)
     {
-        return !SlotTypes.Contains(slot.GetType().Name);
+        if (!SlotTypes.Contains(slot.GetType().Name))
+        {
+            return true;
+        }
+
+        // Exclude slots that refuse to give up their contents (e.g. upgrade/container slots,
+        // take-locked slots, output-only slots in other mods). The sort path uses ItemSlot.TakeOutWhole()
+        // which does NOT respect CanTake(), so we have to filter these out ourselves with `!slot.CanTake()`, otherwise
+        // a non-takeable stack would be pulled out and have nowhere to land, since those slots also refuse CanHold().
+        return !slot.Empty && !slot.CanTake();
     }
 
     private static void LoadClientConfig(ICoreAPI api)
