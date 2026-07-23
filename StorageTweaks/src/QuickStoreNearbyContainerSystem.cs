@@ -9,8 +9,6 @@ namespace StorageTweaks;
 
 public static class QuickStoreNearbyContainerSystem
 {
-    private const int SearchRadius = 8;
-
     // Chest types to include when looking for nearby chests to quick deposit matching items from inventory
     private static readonly HashSet<(string, string)> QuickStackChestTypes =
     [
@@ -210,7 +208,7 @@ public static class QuickStoreNearbyContainerSystem
         var nearbyContainers = GetNearbyContainers(
             fromPlayer.Entity.World,
             pos.AsBlockPos,
-            SearchRadius
+            StorageTweaksModSystem.GetServerConfig().QuickStoreNearbySearchRadius
         );
 
         foreach (var container in nearbyContainers)
