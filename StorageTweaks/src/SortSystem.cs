@@ -190,7 +190,17 @@ public static class SortSystem
                 var contentsB = b.Attributes.GetTreeAttribute("contents")?.ToJsonToken() ?? "";
                 var contentsComparison = string.Compare(contentsA, contentsB, StringComparison.Ordinal);
 
-                return contentsComparison != 0 ? contentsComparison : b.StackSize.CompareTo(a.StackSize);
+                if (contentsComparison != 0)
+                {
+                    return contentsComparison;
+                }
+
+                // fruit tree cuttings are all the same except for having a different type attribute
+                var typeA = a.Attributes.GetAsString("type") ?? "";
+                var typeB = b.Attributes.GetAsString("type") ?? "";
+                var typeComparison = string.Compare(typeA, typeB, StringComparison.Ordinal);
+
+                return typeComparison != 0 ? typeComparison : b.StackSize.CompareTo(a.StackSize);
             });
 
             var skippedSlots = new List<ItemSlot>();
