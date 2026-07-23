@@ -20,6 +20,7 @@ public class ContainerActionButtons(ICoreClientAPI capi)
                 {
                     InventoryId = inventory.InventoryID,
                     StackPerishables = config.StackPerishables,
+                    SkipFavoritesWhenSorting = config.SkipFavoritesWhenSorting,
                 }), Lang.Get("storagetweaks:compact-and-sort"));
             buttonIndex++;
         }

@@ -23,6 +23,8 @@ public class SortInventoryPacket
     [ProtoMember(3)] public bool SortHotbarWithBackpack = false;
 
     [ProtoMember(2)] public bool StackPerishables;
+
+    [ProtoMember(4)] public bool SkipFavoritesWhenSorting;
 }
 
 [ProtoContract]
@@ -77,6 +79,9 @@ public class StorageTweaksClientConfig
     /// When true, the quick store button is hidden in container GUIs.
     /// Quick store via hotkey still works.
     public bool HideQuickStoreButton { get; set; }
+
+    /// When true, favorited items are excluded from sorting (they won't be moved or merged).
+    public bool SkipFavoritesWhenSorting { get; set; }
 }
 
 public class StorageTweaksServerConfig
@@ -588,6 +593,7 @@ public class StorageTweaksModSystem : ModSystem
             {
                 InventoryId = inv.InventoryID,
                 StackPerishables = GetClientConfig().StackPerishables,
+                SkipFavoritesWhenSorting = GetClientConfig().SkipFavoritesWhenSorting,
             });
             return true;
         });
@@ -595,6 +601,7 @@ public class StorageTweaksModSystem : ModSystem
         api.Input.SetHotKeyHandler("storagetweaks.sortcontainer", _ =>
         {
             var stackPerishables = GetClientConfig().StackPerishables;
+            var ignoreFavorites = GetClientConfig().SkipFavoritesWhenSorting;
             var count = 0;
             foreach (var dialog in api.Gui.OpenedGuis)
             {
@@ -621,6 +628,7 @@ public class StorageTweaksModSystem : ModSystem
                 {
                     InventoryId = inv.InventoryID,
                     StackPerishables = stackPerishables,
+                    SkipFavoritesWhenSorting = ignoreFavorites,
                 });
                 count += 1;
             }

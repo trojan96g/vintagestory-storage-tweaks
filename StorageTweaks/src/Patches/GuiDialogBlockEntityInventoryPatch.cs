@@ -37,8 +37,8 @@ public static class GuiDialogBlockEntityInventoryPatch
 
         if (!DialogNamePrefixes.Any(prefix => composer.DialogName.StartsWith(prefix, StringComparison.Ordinal)))
         {
-            capi.Logger.Debug("[StorageTweaks] {0} not in whitelist for block entity dialog names",
-                composer.DialogName);
+            // capi.Logger.Debug("[StorageTweaks] {0} not in whitelist for block entity dialog names",
+            //     composer.DialogName);
             return;
         }
 
