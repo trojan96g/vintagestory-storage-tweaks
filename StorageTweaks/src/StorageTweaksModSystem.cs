@@ -153,6 +153,7 @@ public class StorageTweaksModSystem : ModSystem
         capi.Logger.VerboseDebug("[StorageTweaks] Initialized container action buttons");
         harmony = new Harmony("storagetweaks");
         harmony.PatchAll();
+        MoreInventorysPatch.Apply(harmony, capi);
         capi.Logger.VerboseDebug("[StorageTweaks] Completed harmony patches");
 
         RegisterHotkeys(api);

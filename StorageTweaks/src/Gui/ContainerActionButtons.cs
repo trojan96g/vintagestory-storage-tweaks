@@ -39,5 +39,18 @@ public class ContainerActionButtons(ICoreClientAPI capi)
         {
             composer.Compose();
         }
+
+        // With MoreInventorys mod the buttons appear 60px to the left of dialog.
+        // Re-running CalcWorldBounds on each button fixes the alignment.
+        foreach (var key in new[] { "storagetweaks-sort", "storagetweaks-unload" })
+        {
+            if (composer[key] is not { Bounds: { } btnBounds })
+            {
+                continue;
+            }
+
+            btnBounds.Initialized = false;
+            btnBounds.CalcWorldBounds();
+        }
     }
 }
