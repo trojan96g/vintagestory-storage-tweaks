@@ -124,6 +124,30 @@ public static class QuickStoreNearbyContainerSystem
 
         // Upgradeable Storage - Labeled Storage Vessels (all color variants)
         ("chest", "generic"),
+
+        // MoreInventories
+        ("firstshelfinventory", "firstshelf"), // Food Shelf v.1
+        ("mibasketclosed", "mibasketclosed"), // Cattail Basket
+        ("micrateclosed", "micrateclosed"), // Closed Crate
+        ("rackhorizontal2x2dynamic", "rackhorizontal2x2"), // Double Rack 2x2
+        ("rackhorizontal2x2dynamic", "rackhorizontalframecorner2x2"), // Double Rack Frame Corner 2x2
+        ("rackhorizontal2x2dynamic", "rackhorizontalframeline2x2"),
+        ("rackhorizontaldynamic", "rackhorizontal"), // Double Rack 2x3
+        ("rackhorizontaldynamic", "rackhorizontalframecorner"), // Double Rack Frame Corner 2x3
+        ("rackhorizontaldynamic", "rackhorizontalframeline"),
+        ("rackhorizontalwood2x2dynamic", "rackhorizontalwood2x2"),
+        ("rackhorizontalwood2x3dynamic", "rackhorizontalwood2x3"),
+        ("rackstick1x2dynamic", "rackstick1x2"),
+        ("rackstickdynamic", "rackstick"),
+        ("rackvertical1x2onedynamic", "rackvertical1x2"),
+        ("rackvertical1x2onedynamic", "rackverticalframecorner1x2"),
+        ("rackvertical1x2onedynamic", "rackverticalframeline1x2"),
+        ("rackverticalonedynamic", "rackvertical"),
+        ("rackverticalonedynamic", "rackverticalframecorner"),
+        ("rackverticalonedynamic", "rackverticalframeline"),
+        ("shieldstand", "shieldstand"),
+        ("smallHorizontleWeaponStandInventory", "smallhorizontleswordstand"),
+        ("smallVerticalWeaponStandInventory", "smallverticalweaponstand"),
     ];
 
     private static List<BlockEntityContainer> GetNearbyContainers(IWorldAccessor world, BlockPos position,
