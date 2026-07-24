@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Reflection;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.MathTools;
@@ -58,12 +59,54 @@ public static class QuickStoreNearbyContainerSystem
             StorageTweaksModSystem.GetServerConfig().QuickStoreNearbySearchRadius
         );
 
+        // Collect positions of Food Shelves containers (e.g. Ceiling Rack) whose baked-in
+        // blockMesh needs explicit InitMesh on the client after unload. MarkDirty(true)
+        // only nulls tfMatrices; it does not rebuild blockMesh. See RemeshContainersPacket.
+        var remeshPositions = new List<BlockPos>();
+
         foreach (var container in nearbyContainers)
         {
             StorageTweaksModSystem.UnloadInventory(fromPlayer, container.Inventory, packet.StackPerishables);
             // MarkDirty(true) forces mesh re-tessellation on clients - required for BlockEntityDisplay
-            // subclasses (FoodShelves, Purposeful Storage) that render their contents in the world.
+            // subclasses (Food Shelves, Purposeful Storage) that render their contents in the world.
             container.MarkDirty(true);
+
+            if (NeedsRemesh(container))
+            {
+                remeshPositions.Add(container.Pos.Copy());
+            }
         }
+
+        if (remeshPositions.Count > 0)
+        {
+            ((IServerNetworkChannel)fromPlayer.Entity.Api.Network.GetChannel("storagetweaks"))
+                .SendPacket(new RemeshContainersPacket { Positions = remeshPositions }, fromPlayer);
+        }
+    }
+
+    /// <summary>
+    ///     True when <paramref name="container" /> is a <see cref="BlockEntityDisplay" /> subclass
+    ///     that declares an <c>InitMesh()</c> method - the Food Shelves pattern where the content
+    ///     mesh is cached in <c>blockMesh</c> and only refreshed by the mod's own code.
+    /// </summary>
+    private static bool NeedsRemesh(BlockEntityContainer container)
+    {
+        if (container is not BlockEntityDisplay)
+        {
+            return false;
+        }
+
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public |
+                                   BindingFlags.DeclaredOnly;
+        for (var type = container.GetType(); type != null && type != typeof(object); type = type.BaseType)
+        {
+            var method = type.GetMethod("InitMesh", flags);
+            if (method != null && method.GetParameters().Length == 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

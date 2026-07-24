@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using ConfigLib;
 using HarmonyLib;
 using ProtoBuf;
@@ -11,6 +12,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
+using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
 namespace StorageTweaks;
@@ -39,6 +41,17 @@ public class UnloadInventoryPacket
 public class QuickStoreNearbyContainersPacket
 {
     [ProtoMember(1)] public bool StackPerishables;
+}
+
+[ProtoContract]
+public class RemeshContainersPacket
+{
+    /// Container block positions whose baked display mesh needs to be rebuilt on
+    /// the client after a server-side inventory mutation (e.g. quick store nearby).
+    /// Targets Food Shelves BlockEntityDisplay subclasses that cache their content
+    /// mesh in `blockMesh` and only refresh it from their own `InitMesh()` (e.g.
+    /// the Ceiling Rack), other container kinds are filtered out server-side.
+    [ProtoMember(1)] public List<BlockPos> Positions = [];
 }
 
 [ProtoContract]
@@ -165,7 +178,9 @@ public class StorageTweaksModSystem : ModSystem
             .RegisterMessageType<SortInventoryPacket>()
             .RegisterMessageType<UnloadInventoryPacket>()
             .RegisterMessageType<UpdateFavoritesPacket>()
-            .RegisterMessageType<QuickStoreNearbyContainersPacket>();
+            .RegisterMessageType<QuickStoreNearbyContainersPacket>()
+            .RegisterMessageType<RemeshContainersPacket>()
+            .SetMessageHandler<RemeshContainersPacket>(HandleRemeshContainersPacket);
         capi.Logger.VerboseDebug("[StorageTweaks] Registered channels client side");
 
         FavoritesManager = new FavoritesManager(capi);
@@ -199,6 +214,7 @@ public class StorageTweaksModSystem : ModSystem
             .RegisterMessageType<UnloadInventoryPacket>()
             .RegisterMessageType<UpdateFavoritesPacket>()
             .RegisterMessageType<QuickStoreNearbyContainersPacket>()
+            .RegisterMessageType<RemeshContainersPacket>()
             .SetMessageHandler<SortInventoryPacket>(SortSystem.HandleSortInventory)
             .SetMessageHandler<UnloadInventoryPacket>(HandleUnloadInventory)
             .SetMessageHandler<UpdateFavoritesPacket>(HandleUpdateFavorites)
@@ -676,6 +692,81 @@ public class StorageTweaksModSystem : ModSystem
         {
             system.GetConfig("storagetweaks")?.AssignSettingsValues(config);
         };
+    }
+
+    /// <summary>
+    ///     Client-side handler for <see cref="RemeshContainersPacket" />. Tells FoodShelves-style
+    ///     display containers to rebuild their baked-in content mesh after a server-side inventory
+    ///     mutation (e.g. quick store nearby). Such containers cache their content mesh in
+    ///     <c>blockMesh</c> via their own <c>InitMesh()</c>, which the regular
+    ///     <c>BlockEntityDisplay.MarkMeshesDirty()</c> (triggered by <c>MarkDirty(true)</c>) does
+    ///     not refresh. We defer the work by one tick so the concurrent BE tree-attribute sync
+    ///     (also queued by <c>MarkDirty(true)</c>) has landed and the client-side inventory that
+    ///     <c>InitMesh</c> reads from is current.
+    /// </summary>
+    private void HandleRemeshContainersPacket(RemeshContainersPacket packet)
+    {
+        if (capi == null || packet.Positions.Count == 0)
+        {
+            return;
+        }
+
+        capi.Event.RegisterCallback(_ =>
+        {
+            foreach (var pos in packet.Positions)
+            {
+                var be = capi.World.BlockAccessor.GetBlockEntity(pos);
+                if (be == null)
+                {
+                    continue;
+                }
+
+                var initMesh = FindInitMesh(be.GetType());
+                if (initMesh == null)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    initMesh.Invoke(be, null);
+                }
+                catch (Exception e)
+                {
+                    capi.Logger.Warning("[StorageTweaks] InitMesh invoke failed on {0} at {1}: {2}",
+                        be.GetType().Name, pos, e);
+                    continue;
+                }
+
+                // Force a chunk re-tessellation pass so OnTesselation picks up the refreshed
+                // blockMesh. MarkBlockDirty on the client merely re-renders the block.
+                capi.World.BlockAccessor.MarkBlockDirty(pos);
+            }
+        }, 100);
+    }
+
+    /// <summary>
+    ///     Walks the type hierarchy looking for a parameterless <c>InitMesh()</c> instance method
+    ///     (declared as protected or public). <c>GetMethod</c> with <see cref="BindingFlags.NonPublic" />
+    ///     does not return inherited members, so we walk up the chain ourselves. Returns null when
+    ///     the BE type has no InitMesh (vanilla chests, baskets, etc.) so those are skipped cheaply.
+    /// </summary>
+    private static MethodInfo? FindInitMesh(Type? type)
+    {
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public |
+                                   BindingFlags.DeclaredOnly;
+        while (type != null && type != typeof(object))
+        {
+            var method = type.GetMethod("InitMesh", flags);
+            if (method != null && method.GetParameters().Length == 0)
+            {
+                return method;
+            }
+
+            type = type.BaseType;
+        }
+
+        return null;
     }
 
     public override void Dispose()
