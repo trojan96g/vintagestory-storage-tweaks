@@ -118,6 +118,13 @@ public static class ContainerWhitelist
         "moreinventorys:rackverticalframeline1x2-*",
         "moreinventorys:smallhorizontleswordstand-*",
         "moreinventorys:smallverticalweaponstand-*",
+
+        // Chonky Vessels
+        "chonkyvessels:bundlegrainstoragevessel-*",
+        "chonkyvessels:bundlestoragevessel-*",
+        "chonkyvessels:storagevessel-*",
+        "chonkyvessels:tallchonkystoragevessel-*",
+        "chonkyvessels:tallstoragevessel-*",
     ];
 
     private static readonly HashSet<AssetLocation> Whitelist = [];
