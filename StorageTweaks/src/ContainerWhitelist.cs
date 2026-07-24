@@ -116,6 +116,16 @@ public static class ContainerWhitelist
         "bettercrates:bettercrate2sided-wood-center-north",
         "bettercrates:bettercrate2sided-wood-center-south",
         "bettercrates:bettercrate2sided-wood-center-west",
+
+        // Extra Chests mod
+        "extrachests:labeledchest-east",
+        "extrachests:labeledchest-north",
+        "extrachests:labeledchest-south",
+        "extrachests:labeledchest-west",
+        "extrachests:chest-east",
+        "extrachests:chest-north",
+        "extrachests:chest-south",
+        "extrachests:chest-west",
     ];
 
     /// <summary>
