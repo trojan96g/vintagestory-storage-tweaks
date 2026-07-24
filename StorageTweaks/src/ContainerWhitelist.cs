@@ -13,7 +13,7 @@ namespace StorageTweaks;
 /// </summary>
 public static class ContainerWhitelist
 {
-    private static readonly HashSet<string> BuiltInWhitelist =
+    private static readonly HashSet<AssetLocation> BuiltInWhitelist =
     [
         // vanilla containers
         "game:chest-*",
@@ -21,49 +21,7 @@ public static class ContainerWhitelist
         "game:labeledchest-*",
         // String Sense mod uses game:stationarybasket as well
         "game:stationarybasket-*",
-        "game:storagevessel-abyss",
-        "game:storagevessel-ashforest",
-        "game:storagevessel-beehive",
-        "game:storagevessel-black-fired",
-        "game:storagevessel-blue-fired",
-        "game:storagevessel-brown-fired",
-        "game:storagevessel-caveaurora",
-        "game:storagevessel-chains",
-        "game:storagevessel-chthonic",
-        "game:storagevessel-cloisonne",
-        "game:storagevessel-collonade",
-        "game:storagevessel-copper",
-        "game:storagevessel-cornflower",
-        "game:storagevessel-cowrie",
-        "game:storagevessel-cream-fired",
-        "game:storagevessel-earthen",
-        "game:storagevessel-earthyorange-fired",
-        "game:storagevessel-entrenched",
-        "game:storagevessel-fire-fired",
-        "game:storagevessel-golden",
-        "game:storagevessel-gray-fired",
-        "game:storagevessel-harvest",
-        "game:storagevessel-honeydew",
-        "game:storagevessel-loam",
-        "game:storagevessel-motheaten",
-        "game:storagevessel-orange-fired",
-        "game:storagevessel-oxblood",
-        "game:storagevessel-patina",
-        "game:storagevessel-pine",
-        "game:storagevessel-rain",
-        "game:storagevessel-rattlesnake",
-        "game:storagevessel-red-fired",
-        "game:storagevessel-rime",
-        "game:storagevessel-rutile",
-        "game:storagevessel-seasalt",
-        "game:storagevessel-serpents",
-        "game:storagevessel-springflowers",
-        "game:storagevessel-talik",
-        "game:storagevessel-tan-fired",
-        "game:storagevessel-void",
-        "game:storagevessel-volcanic",
-        "game:storagevessel-waves",
-        "game:storagevessel-wintersea",
+        "game:storagevessel-*",
         "game:trunk-*",
 
         // Better Crates mod
@@ -91,28 +49,44 @@ public static class ContainerWhitelist
         "containersbundle:foodcupboardwall-*",
         "containersbundle:linencrate-*",
         "containersbundle:longcrate-*",
-        "containersbundle:metalcabinetnolabel-*-bismuthbronze",
-        "containersbundle:metalcabinetnolabel-*-brass",
-        "containersbundle:metalcabinetnolabel-*-copper",
-        "containersbundle:metalcabinetnolabel-*-electrum",
-        "containersbundle:metalcabinetnolabel-*-gold",
-        "containersbundle:metalcabinetnolabel-*-iron",
-        "containersbundle:metalcabinetnolabel-*-lead",
-        "containersbundle:metalcabinetnolabel-*-meteoriciron",
-        "containersbundle:metalcabinetnolabel-*-nickel",
-        "containersbundle:metalcabinetnolabel-*-platinum",
-        "containersbundle:metalcabinetnolabel-*-silver",
-        "containersbundle:metalcabinetnolabel-*-steel",
-        "containersbundle:metalcabinetnolabel-*-tin",
-        "containersbundle:metalcabinetnolabel-*-tinbronze",
-        "containersbundle:metalcabinetnolabel-*-titanium",
-        "containersbundle:metalcabinetnolabel-*-zinc",
+        "containersbundle:metalcabinetnolabel-*",
         "containersbundle:stonecasket-*",
-        "containersbundle:strongbox-*-bismuthbronze",
-        "containersbundle:strongbox-*-blackbronze",
-        "containersbundle:strongbox-*-tinbronze",
+        "containersbundle:strongbox-*",
         "containersbundle:wickerbasket-*",
         "containersbundle:woodenbox-*",
+
+        // Food Shelves mod
+        // "foodshelves:barrelrack-normal-*",
+        // "foodshelves:barrelrack-top-*",
+        "foodshelves:breadshelf-normal-*",
+        "foodshelves:ceilingrack-normal",
+        "foodshelves:coolingcabinet-normal-*",
+        "foodshelves:doubleshelf-normal-*",
+        "foodshelves:eggbasket-normal",
+        "foodshelves:eggshelf-normal-*",
+        "foodshelves:eggshelf-short-*",
+        "foodshelves:floursack-normal-*",
+        "foodshelves:fooddisplayblock-*",
+        "foodshelves:fooddisplayblock-top",
+        "foodshelves:fooddisplaycase-normal-*",
+        "foodshelves:fruitbasket-normal",
+        "foodshelves:fruitcooler-normal-*",
+        "foodshelves:jar-normal",
+        "foodshelves:jarlarge-normal",
+        "foodshelves:jarstand-normal-*",
+        "foodshelves:meatfreezer-normal-*",
+        "foodshelves:mushroombasket-normal",
+        "foodshelves:pieshelf-normal-*",
+        "foodshelves:pumpkincase-normal",
+        "foodshelves:seedbins-normal-*",
+        "foodshelves:seedshelf-normal-*",
+        "foodshelves:seedshelf-short-*",
+        "foodshelves:shortshelf-normal-*",
+        "foodshelves:tablewshelf-normal-*",
+        // "foodshelves:tunrack-normal-*",
+        // "foodshelves:tunrack-top-*",
+        "foodshelves:vegetablebasket-normal",
+        "foodshelves:wallcabinet-normal-*",
     ];
 
     private static readonly HashSet<AssetLocation> Whitelist = [];
@@ -121,10 +95,22 @@ public static class ContainerWhitelist
     {
         var stopwatch = Stopwatch.StartNew();
         Whitelist.Clear();
-        var builtinWhitelist = BuiltInWhitelist.ToArray();
+
         var serverConfig = StorageTweaksModSystem.GetServerConfig();
-        var additionalContainerWhitelist = serverConfig.AdditionalContainerWhitelist;
-        var blacklist = serverConfig.ContainerBlacklist;
+        var registry = api.World.ClassRegistry;
+
+        // Pre-build the AssetLocation needles once, outside the per-collectible loop, so we
+        // don't allocate a fresh AssetLocation for every (collectible x needle) pair.
+        var builtinWhitelist = BuiltInWhitelist
+            .ToArray();
+        var blacklist = serverConfig.ContainerBlacklist
+            .Where(needle => !string.IsNullOrWhiteSpace(needle))
+            .Select(needle => new AssetLocation(needle))
+            .ToArray();
+        var additionalWhitelist = serverConfig.AdditionalContainerWhitelist
+            .Where(needle => !string.IsNullOrWhiteSpace(needle))
+            .Select(needle => new AssetLocation(needle))
+            .ToArray();
 
         // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
         foreach (var item in api.World.Collectibles)
@@ -135,20 +121,38 @@ public static class ContainerWhitelist
                 continue;
             }
 
-            if (blacklist.Any(needle => WildcardUtil.Match(new AssetLocation(needle), code)))
+            // Skip non block items up front
+            if (item is not Block block)
             {
                 continue;
             }
 
-            if (BuiltInWhitelist.Contains(code) || builtinWhitelist.Any(needle => WildcardUtil.Match(new AssetLocation(needle), code)))
+            var entityClass = block.EntityClass;
+            if (string.IsNullOrEmpty(entityClass))
+            {
+                continue;
+            }
+
+            // early discard none container item types
+            var blockEntityType = registry.GetBlockEntity(entityClass);
+            if (blockEntityType == null || !typeof(IBlockEntityContainer).IsAssignableFrom(blockEntityType))
+            {
+                continue;
+            }
+
+            if (blacklist.Any(needle => WildcardUtil.Match(needle, code)))
+            {
+                continue;
+            }
+
+            if (BuiltInWhitelist.Contains(code) || builtinWhitelist.Any(needle => WildcardUtil.Match(needle, code)))
             {
                 Whitelist.Add(code);
                 continue;
             }
 
             // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-            if (additionalContainerWhitelist.Where(needle => needle != null && needle.Trim().Length > 0)
-                .Any(needle => WildcardUtil.Match(new AssetLocation(needle), code)))
+            if (additionalWhitelist.Any(needle => WildcardUtil.Match(needle, code)))
             {
                 Whitelist.Add(code);
             }
