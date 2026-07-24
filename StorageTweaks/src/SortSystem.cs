@@ -15,6 +15,13 @@ public record SortSuccess : SortResult;
 
 public static class SortSystem
 {
+    // slot class names that can be sorted into but maybe not out of unless also in the StorageTweaksModSystem.SlotTypes
+    private static readonly HashSet<string> TargetWhitelist =
+    [
+        // tool-strap slot from https://mods.vintagestory.at/modularbackpacks
+        "ItemSlotToolBagContent",
+    ];
+
     public static void HandleSortInventory(IServerPlayer fromPlayer, SortInventoryPacket packet)
     {
         var inventory = fromPlayer.InventoryManager.GetInventory(packet.InventoryId);
@@ -191,7 +198,7 @@ public static class SortSystem
                     }
 
                     skippedSlots.Add(weightedSlot.slot);
-                    if (StorageTweaksModSystem.IsExcludedSlot(weightedSlot.slot))
+                    if (StorageTweaksModSystem.IsExcludedSlot(weightedSlot.slot) && !CanSortInto(weightedSlot.slot))
                     {
                         world.Logger.Warning("Got best suited slot that is excluded: {0}",
                             weightedSlot.slot.GetType().Name);
@@ -214,5 +221,11 @@ public static class SortSystem
         }
 
         return new SortSuccess();
+    }
+
+    // returns true if the slot can be used to place items into after sorting
+    private static bool CanSortInto(ItemSlot slot)
+    {
+        return TargetWhitelist.Contains(slot.GetType().Name);
     }
 }

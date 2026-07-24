@@ -24,6 +24,14 @@ public class InventoryBasePatch
     public static void Postfix(ref float __result, ItemSlot sourceSlot, ItemSlot targetSlot, bool isMerge)
     {
         var slotType = targetSlot.GetType();
+
+        // increase priority of toolstrap slots from Modular Backpacks mod
+        if (slotType.Name == "ItemSlotToolBagContent")
+        {
+            __result += 1.0f;
+            return;
+        }
+
         if (slotType.Name != "ItemSlotBagContentWithWildcardMatch")
         {
             return;
