@@ -431,13 +431,22 @@ public class StorageTweaksModSystem : ModSystem
             destInventory.InventoryID, destInventory.GetType().Name, destInventory.Count,
             string.Join(",", existingCodes), stackPerishables);
 
-        ProcessInventorySlots(playerInv, destInventory, existingCodes, fromPlayer, stackPerishables);
-        ProcessInventorySlots(playerHotbar, destInventory, existingCodes, fromPlayer, stackPerishables);
+        // Food Shelves containers cap items per *segment* (a run of ItemsPerSegment slots)
+        // based on item size - the vanilla GetBestSuitedSlot path we use ignores that cap,
+        // so we wrap the destination inventory in a segment guard that pre-blocks slots in
+        // already-full segments. The guard is disabled when Food Shelves isn't loaded.
+        var segmentGuard = FoodShelvesSegmentGuard.For(destInventory, fromPlayer.Entity.World);
+
+        ProcessInventorySlots(playerInv, destInventory, existingCodes, fromPlayer, stackPerishables,
+            segmentGuard);
+        ProcessInventorySlots(playerHotbar, destInventory, existingCodes, fromPlayer, stackPerishables,
+            segmentGuard);
     }
 
     [SuppressMessage("ReSharper", "SuggestBaseTypeForParameter")]
     private static void ProcessInventorySlots(IInventory sourceInventory, IInventory destInventory,
-        HashSet<string> existingCodes, IServerPlayer fromPlayer, bool stackPerishables)
+        HashSet<string> existingCodes, IServerPlayer fromPlayer, bool stackPerishables,
+        FoodShelvesSegmentGuard segmentGuard)
     {
         List<ItemSlot> ignoredSlots = [];
         foreach (var slot in sourceInventory)
@@ -458,6 +467,14 @@ public class StorageTweaksModSystem : ModSystem
             }
 
             ignoredSlots.Clear();
+            // Seed ignored slots with those whose segment is already at the per-segment cap
+            // for this source stack (Food Shelves itemsPerSegment layout). For non-Food Shelves
+            // inventories (or bulk slots) the guard returns nothing, so this is a no-op.
+            if (segmentGuard.Enabled)
+            {
+                ignoredSlots.AddRange(segmentGuard.FullSlotsFor(destInventory, slot.Itemstack!));
+            }
+
             var world = fromPlayer.Entity.World;
             // DirectMerge blends transition state so differently-perished food stacks;
             // AutoMerge (vanilla) refuses to merge stacks with mismatched perish progress.
@@ -474,6 +491,14 @@ public class StorageTweaksModSystem : ModSystem
                     {
                         if (fallbackIgnored.Contains(destSlot))
                         {
+                            continue;
+                        }
+
+                        // Honor the Food Shelves per-segment cap: a slot whose segment is at capacity
+                        // is treated as "cannot hold" so we don't overstuff that segment.
+                        if (segmentGuard.Enabled && segmentGuard.SegmentIsFull(destSlot, slot.Itemstack!))
+                        {
+                            fallbackIgnored.Add(destSlot);
                             continue;
                         }
 
@@ -521,6 +546,17 @@ public class StorageTweaksModSystem : ModSystem
                 }
 
                 slot.TryPutInto(suitedSlot.slot, ref op);
+                // After a successful TryPutInto a Food Shelves segment may now be at its cap
+                // for this stack. Block its remaining slots so the next GetBestSuitedSlot
+                // iteration skips them (mirrors Food Shelves' own TryPut exit condition).
+                if (segmentGuard.Enabled && !slot.Empty)
+                {
+                    if (segmentGuard.SegmentIsFull(suitedSlot.slot, slot.Itemstack!))
+                    {
+                        ignoredSlots.AddRange(BlockSegmentSiblings(destInventory, segmentGuard, slot.Itemstack));
+                    }
+                }
+
                 if (slot.Empty)
                 {
                     break;
@@ -543,6 +579,17 @@ public class StorageTweaksModSystem : ModSystem
         // which does NOT respect CanTake(), so we have to filter these out ourselves with `!slot.CanTake()`, otherwise
         // a non-takeable stack would be pulled out and have nowhere to land, since those slots also refuse CanHold().
         return !slot.Empty && !slot.CanTake();
+    }
+
+    /// <summary>
+    ///     Re-scans the destination inventory for Food Shelves segments that just reached
+    ///     their GetSegmentLimit cap as a result of a recent TryPutInto, and returns the remaining
+    ///     slots for each segment that should be skipped.
+    /// </summary>
+    private static HashSet<ItemSlot> BlockSegmentSiblings(IInventory destInventory,
+        FoodShelvesSegmentGuard segmentGuard, ItemStack sourceStack)
+    {
+        return !segmentGuard.Enabled ? [] : segmentGuard.FullSlotsFor(destInventory, sourceStack);
     }
 
     private static void LoadClientConfig(ICoreAPI api)
@@ -695,13 +742,13 @@ public class StorageTweaksModSystem : ModSystem
     }
 
     /// <summary>
-    ///     Client-side handler for <see cref="RemeshContainersPacket" />. Tells FoodShelves-style
-    ///     display containers to rebuild their baked-in content mesh after a server-side inventory
-    ///     mutation (e.g. quick store nearby). Such containers cache their content mesh in
-    ///     <c>blockMesh</c> via their own <c>InitMesh()</c>, which the regular
-    ///     <c>BlockEntityDisplay.MarkMeshesDirty()</c> (triggered by <c>MarkDirty(true)</c>) does
-    ///     not refresh. We defer the work by one tick so the concurrent BE tree-attribute sync
-    ///     (also queued by <c>MarkDirty(true)</c>) has landed and the client-side inventory that
+    ///     Client-side handler for <see cref="RemeshContainersPacket" />. Tells Food Shelves
+    ///     display containers (and similar mods) to rebuild their baked-in content mesh after
+    ///     a server-side inventory mutation (e.g. quick store nearby). Such containers cache
+    ///     their content mesh in <c>blockMesh</c> via their own <c>InitMesh()</c>, which the
+    ///     regular <c>BlockEntityDisplay.MarkMeshesDirty()</c> (triggered by <c>MarkDirty(true)</c>)
+    ///     does not refresh. Deferred by one tick so the concurrent BE tree-attribute sync
+    ///     (also queued by <c>MarkDirty(true)</c>) has landed and the client-side inventory
     ///     <c>InitMesh</c> reads from is current.
     /// </summary>
     private void HandleRemeshContainersPacket(RemeshContainersPacket packet)
@@ -738,8 +785,7 @@ public class StorageTweaksModSystem : ModSystem
                     continue;
                 }
 
-                // Force a chunk re-tessellation pass so OnTesselation picks up the refreshed
-                // blockMesh. MarkBlockDirty on the client merely re-renders the block.
+                // Re-tessellate the chunk so OnTesselation picks up the refreshed blockMesh.
                 capi.World.BlockAccessor.MarkBlockDirty(pos);
             }
         }, 100);
@@ -747,9 +793,9 @@ public class StorageTweaksModSystem : ModSystem
 
     /// <summary>
     ///     Walks the type hierarchy looking for a parameterless <c>InitMesh()</c> instance method
-    ///     (declared as protected or public). <c>GetMethod</c> with <see cref="BindingFlags.NonPublic" />
-    ///     does not return inherited members, so we walk up the chain ourselves. Returns null when
-    ///     the BE type has no InitMesh (vanilla chests, baskets, etc.) so those are skipped cheaply.
+    ///     (the Food Shelves pattern; declared as protected). <see cref="BindingFlags.NonPublic" />
+    ///     does not return inherited members, so we walk up the chain ourselves. Returns null
+    ///     when the BE type has no InitMesh (vanilla chests, baskets, etc.) so those are skipped.
     /// </summary>
     private static MethodInfo? FindInitMesh(Type? type)
     {
