@@ -87,6 +87,37 @@ public static class ContainerWhitelist
         // "foodshelves:tunrack-top-*",
         "foodshelves:vegetablebasket-normal",
         "foodshelves:wallcabinet-normal-*",
+
+        // Upgradeable Storage mod
+        "upgradablestorage:chest-*",
+        "upgradablestorage:labeledchest-*",
+        "upgradablestorage:labeledstoragevessel-*",
+        "upgradablestorage:labeledtrunk-*",
+        "upgradablestorage:storagevessel-*",
+        "upgradablestorage:trunk-*",
+
+        // More Inventorys
+        "moreinventorys:firstshelf-*",
+        "moreinventorys:mibasketclosed-*",
+        "moreinventorys:micrateclosed-*",
+        "moreinventorys:rackhorizontal-*",
+        "moreinventorys:rackhorizontal2x2-*",
+        "moreinventorys:rackhorizontalframecorner-*",
+        "moreinventorys:rackhorizontalframecorner2x2-*",
+        "moreinventorys:rackhorizontalframeline-*",
+        "moreinventorys:rackhorizontalframeline2x2-*",
+        "moreinventorys:rackhorizontalwood2x2-*",
+        "moreinventorys:rackhorizontalwood2x3-*",
+        "moreinventorys:rackstick-*",
+        "moreinventorys:rackstick1x2-*",
+        "moreinventorys:rackvertical-*",
+        "moreinventorys:rackvertical1x2-*",
+        "moreinventorys:rackverticalframecorner-*",
+        "moreinventorys:rackverticalframecorner1x2-*",
+        "moreinventorys:rackverticalframeline-*",
+        "moreinventorys:rackverticalframeline1x2-*",
+        "moreinventorys:smallhorizontleswordstand-*",
+        "moreinventorys:smallverticalweaponstand-*",
     ];
 
     private static readonly HashSet<AssetLocation> Whitelist = [];
