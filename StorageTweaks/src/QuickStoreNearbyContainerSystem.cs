@@ -25,7 +25,7 @@ public static class QuickStoreNearbyContainerSystem
             var code = bc.Block.Code;
             var allowed = ContainerWhitelist.IsAllowed(code);
             world.Logger.Debug(
-                $"[StorageTweaks] Quick store nearby {(allowed ? "matched" : "skipped")} container \"{code}\" at {x},{y},{z}");
+                $"[StorageTweaks] Quick store nearby {(allowed ? "matched" : "skipped")} container \"{code}\"");
             if (!allowed)
             {
                 return;

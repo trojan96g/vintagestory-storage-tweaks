@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Vintagestory.API.Common;
+using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 
 namespace StorageTweaks;
@@ -13,20 +16,11 @@ public static class ContainerWhitelist
     private static readonly HashSet<string> BuiltInWhitelist =
     [
         // vanilla containers
-        "game:chest-east",
-        "game:chest-north",
-        "game:chest-south",
-        "game:chest-west",
+        "game:chest-*",
         "game:crate",
-        "game:labeledchest-east",
-        "game:labeledchest-north",
-        "game:labeledchest-south",
-        "game:labeledchest-west",
+        "game:labeledchest-*",
         // String Sense mod uses game:stationarybasket as well
-        "game:stationarybasket-east",
-        "game:stationarybasket-north",
-        "game:stationarybasket-south",
-        "game:stationarybasket-west",
+        "game:stationarybasket-*",
         "game:storagevessel-abyss",
         "game:storagevessel-ashforest",
         "game:storagevessel-beehive",
@@ -70,63 +64,101 @@ public static class ContainerWhitelist
         "game:storagevessel-volcanic",
         "game:storagevessel-waves",
         "game:storagevessel-wintersea",
-        "game:trunk-east",
-        "game:trunk-north",
-        "game:trunk-south",
-        "game:trunk-west",
+        "game:trunk-*",
 
         // Better Crates mod
-        "bettercrates:bettercrate-bronze-center-east",
-        "bettercrates:bettercrate-bronze-center-north",
-        "bettercrates:bettercrate-bronze-center-south",
-        "bettercrates:bettercrate-bronze-center-west",
-        "bettercrates:bettercrate-copper-center-east",
-        "bettercrates:bettercrate-copper-center-north",
-        "bettercrates:bettercrate-copper-center-south",
-        "bettercrates:bettercrate-copper-center-west",
-        "bettercrates:bettercrate-iron-center-east",
-        "bettercrates:bettercrate-iron-center-north",
-        "bettercrates:bettercrate-iron-center-south",
-        "bettercrates:bettercrate-iron-center-west",
-        "bettercrates:bettercrate-steel-center-east",
-        "bettercrates:bettercrate-steel-center-north",
-        "bettercrates:bettercrate-steel-center-south",
-        "bettercrates:bettercrate-steel-center-west",
-        "bettercrates:bettercrate-wood-center-east",
-        "bettercrates:bettercrate-wood-center-north",
-        "bettercrates:bettercrate-wood-center-south",
-        "bettercrates:bettercrate-wood-center-west",
-        "bettercrates:bettercrate2sided-bronze-center-east",
-        "bettercrates:bettercrate2sided-bronze-center-north",
-        "bettercrates:bettercrate2sided-bronze-center-south",
-        "bettercrates:bettercrate2sided-bronze-center-west",
-        "bettercrates:bettercrate2sided-copper-center-east",
-        "bettercrates:bettercrate2sided-copper-center-north",
-        "bettercrates:bettercrate2sided-copper-center-south",
-        "bettercrates:bettercrate2sided-copper-center-west",
-        "bettercrates:bettercrate2sided-iron-center-east",
-        "bettercrates:bettercrate2sided-iron-center-north",
-        "bettercrates:bettercrate2sided-iron-center-south",
-        "bettercrates:bettercrate2sided-iron-center-west",
-        "bettercrates:bettercrate2sided-steel-center-east",
-        "bettercrates:bettercrate2sided-steel-center-north",
-        "bettercrates:bettercrate2sided-steel-center-south",
-        "bettercrates:bettercrate2sided-steel-center-west",
-        "bettercrates:bettercrate2sided-wood-center-east",
-        "bettercrates:bettercrate2sided-wood-center-north",
-        "bettercrates:bettercrate2sided-wood-center-south",
-        "bettercrates:bettercrate2sided-wood-center-west",
+        "bettercrates:bettercrate-bronze-center-*",
+        "bettercrates:bettercrate-copper-center-*",
+        "bettercrates:bettercrate-iron-center-*",
+        "bettercrates:bettercrate-steel-center-*",
+        "bettercrates:bettercrate-wood-center-*",
+        "bettercrates:bettercrate2sided-bronze-center-*",
+        "bettercrates:bettercrate2sided-copper-center-*",
+        "bettercrates:bettercrate2sided-iron-center-*",
+        "bettercrates:bettercrate2sided-steel-center-*",
+        "bettercrates:bettercrate2sided-wood-center-*",
 
         // Extra Chests mod
-        "extrachests:labeledchest-east",
-        "extrachests:labeledchest-north",
-        "extrachests:labeledchest-south",
-        "extrachests:labeledchest-west",
-        "extrachests:chest-east",
-        "extrachests:chest-north",
-        "extrachests:chest-south",
-        "extrachests:chest-west",
+        "extrachests:labeledchest-*",
+        "extrachests:chest-*",
+
+        // Containers Bundle mod
+        "containersbundle:bamboochest-*",
+        "containersbundle:cupboardnolabel-*",
+        "containersbundle:cupboardwithlabel-*",
+        "containersbundle:exquisitechest-*",
+        "containersbundle:foodcupboard-*",
+        "containersbundle:foodcupboardwall-*",
+        "containersbundle:linencrate-*",
+        "containersbundle:longcrate-*",
+        "containersbundle:metalcabinetnolabel-*-bismuthbronze",
+        "containersbundle:metalcabinetnolabel-*-brass",
+        "containersbundle:metalcabinetnolabel-*-copper",
+        "containersbundle:metalcabinetnolabel-*-electrum",
+        "containersbundle:metalcabinetnolabel-*-gold",
+        "containersbundle:metalcabinetnolabel-*-iron",
+        "containersbundle:metalcabinetnolabel-*-lead",
+        "containersbundle:metalcabinetnolabel-*-meteoriciron",
+        "containersbundle:metalcabinetnolabel-*-nickel",
+        "containersbundle:metalcabinetnolabel-*-platinum",
+        "containersbundle:metalcabinetnolabel-*-silver",
+        "containersbundle:metalcabinetnolabel-*-steel",
+        "containersbundle:metalcabinetnolabel-*-tin",
+        "containersbundle:metalcabinetnolabel-*-tinbronze",
+        "containersbundle:metalcabinetnolabel-*-titanium",
+        "containersbundle:metalcabinetnolabel-*-zinc",
+        "containersbundle:stonecasket-*",
+        "containersbundle:strongbox-*-bismuthbronze",
+        "containersbundle:strongbox-*-blackbronze",
+        "containersbundle:strongbox-*-tinbronze",
+        "containersbundle:wickerbasket-*",
+        "containersbundle:woodenbox-*",
     ];
+
+    private static readonly HashSet<AssetLocation> Whitelist = [];
+
+    public static void InitWhitelist(ICoreServerAPI api)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        Whitelist.Clear();
+        var builtinWhitelist = BuiltInWhitelist.ToArray();
+        var serverConfig = StorageTweaksModSystem.GetServerConfig();
+        var additionalContainerWhitelist = serverConfig.AdditionalContainerWhitelist;
+        var blacklist = serverConfig.ContainerBlacklist;
+
+        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+        foreach (var item in api.World.Collectibles)
+        {
+            var code = item.Code;
+            if (code is null)
+            {
+                continue;
+            }
+
+            if (blacklist.Any(needle => WildcardUtil.Match(new AssetLocation(needle), code)))
+            {
+                continue;
+            }
+
+            if (BuiltInWhitelist.Contains(code) || builtinWhitelist.Any(needle => WildcardUtil.Match(new AssetLocation(needle), code)))
+            {
+                Whitelist.Add(code);
+                continue;
+            }
+
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (additionalContainerWhitelist.Where(needle => needle != null && needle.Trim().Length > 0)
+                .Any(needle => WildcardUtil.Match(new AssetLocation(needle), code)))
+            {
+                Whitelist.Add(code);
+            }
+        }
+
+        var codes = string.Join(Environment.NewLine, Whitelist.Select(code => code.ToString()));
+        stopwatch.Stop();
+        var duration = stopwatch.ElapsedMilliseconds;
+        api.Logger.VerboseDebug($"[StorageTweaks] Store nearby whitelist initialized with {Whitelist.Count} items in {duration} ms:\n{codes}");
+    }
 
     /// <summary>
     ///     Returns <c>true</c> when the given container <see cref="Block.Code" /> is allowed by the
@@ -137,29 +169,6 @@ public static class ContainerWhitelist
     public static bool IsAllowed(AssetLocation code)
     {
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (code == null)
-        {
-            return false;
-        }
-
-        var serverConfig = StorageTweaksModSystem.GetServerConfig();
-        if (MatchesAny(serverConfig.ContainerBlacklist, code))
-        {
-            return false;
-        }
-
-        return BuiltInWhitelist.Contains(code) ||
-               MatchesAny(serverConfig.AdditionalContainerWhitelist, code);
-    }
-
-    private static bool MatchesAny(IEnumerable<string>? patterns, AssetLocation code)
-    {
-        if (patterns == null)
-        {
-            return false;
-        }
-
-        return patterns.Where(pattern => !string.IsNullOrWhiteSpace(pattern))
-            .Any(pattern => WildcardUtil.Match(new AssetLocation(pattern), code));
+        return code != null && Whitelist.Contains(code);
     }
 }

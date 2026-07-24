@@ -20,11 +20,11 @@ public class SortInventoryPacket
 {
     [ProtoMember(1)] public required string InventoryId;
 
+    [ProtoMember(4)] public bool SkipFavoritesWhenSorting;
+
     [ProtoMember(3)] public bool SortHotbarWithBackpack = false;
 
     [ProtoMember(2)] public bool StackPerishables;
-
-    [ProtoMember(4)] public bool SkipFavoritesWhenSorting;
 }
 
 [ProtoContract]
@@ -209,6 +209,8 @@ public class StorageTweaksModSystem : ModSystem
         PopulateToolAndFoodCodes(api);
         sapi.Logger.VerboseDebug("[StorageTweaks] Populated tool and food codes");
 
+        ContainerWhitelist.InitWhitelist(api);
+
         api.Event.PlayerJoin += OnPlayerJoin;
 
         sapi.Logger.VerboseDebug("[StorageTweaks] Starting StorageTweaksModSystem server side");
@@ -378,7 +380,10 @@ public class StorageTweaksModSystem : ModSystem
                 continue;
             }
 
-            if (destSlot.Itemstack == null) continue;
+            if (destSlot.Itemstack == null)
+            {
+                continue;
+            }
 
             // try catching here because one user got a null reference exception
             // no idea how because destSlot.Empty above should ensure that Itemstack is not null
