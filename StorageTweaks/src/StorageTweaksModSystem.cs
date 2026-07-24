@@ -423,11 +423,11 @@ public class StorageTweaksModSystem : ModSystem
 
         if (existingCodes.Count == 0)
         {
-            Logger().Debug("[StorageTweaks] UnloadInventory: no existing codes in dest ({0}), skipping", destInventory.InventoryID);
+            Logger().VerboseDebug("[StorageTweaks] UnloadInventory: no existing codes in dest ({0}), skipping", destInventory.InventoryID);
             return;
         }
 
-        Logger().Debug("[StorageTweaks] UnloadInventory: dest={0} class={1} slots={2} existingCodes=[{3}] stackPerishables={4}",
+        Logger().VerboseDebug("[StorageTweaks] UnloadInventory: dest={0} class={1} slots={2} existingCodes=[{3}] stackPerishables={4}",
             destInventory.InventoryID, destInventory.GetType().Name, destInventory.Count,
             string.Join(",", existingCodes), stackPerishables);
 
