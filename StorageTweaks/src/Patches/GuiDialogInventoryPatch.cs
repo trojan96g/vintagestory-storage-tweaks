@@ -90,16 +90,11 @@ public class GuiDialogInventoryPatch
         modSystem.InventoryActionButtons!.ComposeGui(composer);
     }
 
-    [HarmonyPatch(typeof(GuiDialog), "OnGuiClosed")]
+    [HarmonyPatch(typeof(GuiDialogInventory), "CloseIconPressed")]
     [HarmonyPostfix]
     // ReSharper disable once InconsistentNaming
-    public static void OnGuiClosed(GuiDialog __instance)
+    public static void CloseIconPressed(GuiDialogInventory __instance)
     {
-        if (__instance is not GuiDialogInventory && __instance.GetType().Name != "GuiDialogSurvivalInventory")
-        {
-            return;
-        }
-
         var capi = GetApi(__instance);
         var modSystem = capi.ModLoader.GetModSystem<StorageTweaksModSystem>();
         if (modSystem?.FavoritesManager == null)
