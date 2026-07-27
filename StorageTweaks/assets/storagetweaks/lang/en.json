@@ -8,5 +8,6 @@
   "hotkey-sort-inventory": "Sort Inventory",
   "hotkey-sort-container": "Sort Open Container(s)",
   "hotkey-store-nearby": "Quick Store in Nearby Containers",
+  "game:tabname-storage-containers": "Containers",
   "game:item-hoovedwearables-lowerbackside-saddlebags2": "Saddlebags"
 }

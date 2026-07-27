@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using ConfigLib;
 using HarmonyLib;
 using ProtoBuf;
@@ -11,6 +12,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
+using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
 namespace StorageTweaks;
@@ -20,11 +22,11 @@ public class SortInventoryPacket
 {
     [ProtoMember(1)] public required string InventoryId;
 
+    [ProtoMember(4)] public bool SkipFavoritesWhenSorting;
+
     [ProtoMember(3)] public bool SortHotbarWithBackpack = false;
 
     [ProtoMember(2)] public bool StackPerishables;
-
-    [ProtoMember(4)] public bool SkipFavoritesWhenSorting;
 }
 
 [ProtoContract]
@@ -39,6 +41,17 @@ public class UnloadInventoryPacket
 public class QuickStoreNearbyContainersPacket
 {
     [ProtoMember(1)] public bool StackPerishables;
+}
+
+[ProtoContract]
+public class RemeshContainersPacket
+{
+    /// Container block positions whose baked display mesh needs to be rebuilt on
+    /// the client after a server-side inventory mutation (e.g. quick store nearby).
+    /// Targets Food Shelves BlockEntityDisplay subclasses that cache their content
+    /// mesh in `blockMesh` and only refresh it from their own `InitMesh()` (e.g.
+    /// the Ceiling Rack), other container kinds are filtered out server-side.
+    [ProtoMember(1)] public List<BlockPos> Positions = [];
 }
 
 [ProtoContract]
@@ -89,6 +102,13 @@ public class StorageTweaksServerConfig
     /// The search radius (in blocks) used when quick storing nearby containers.
     /// The search area is a cube of (2*radius+1)^3 blocks centered on the player.
     public int QuickStoreNearbySearchRadius { get; set; } = 8;
+
+    /// Additional container patterns merged with the built-in whitelist for quick storing nearby.
+    public List<string> AdditionalContainerWhitelist { get; set; } = [];
+
+    /// Container patterns that are never considered by quick store nearby, even when matched by the
+    /// built-in or additional whitelist.
+    public List<string> ContainerBlacklist { get; set; } = [];
 }
 
 // ReSharper disable once UnusedType.Global
@@ -158,7 +178,9 @@ public class StorageTweaksModSystem : ModSystem
             .RegisterMessageType<SortInventoryPacket>()
             .RegisterMessageType<UnloadInventoryPacket>()
             .RegisterMessageType<UpdateFavoritesPacket>()
-            .RegisterMessageType<QuickStoreNearbyContainersPacket>();
+            .RegisterMessageType<QuickStoreNearbyContainersPacket>()
+            .RegisterMessageType<RemeshContainersPacket>()
+            .SetMessageHandler<RemeshContainersPacket>(HandleRemeshContainersPacket);
         capi.Logger.VerboseDebug("[StorageTweaks] Registered channels client side");
 
         FavoritesManager = new FavoritesManager(capi);
@@ -192,6 +214,7 @@ public class StorageTweaksModSystem : ModSystem
             .RegisterMessageType<UnloadInventoryPacket>()
             .RegisterMessageType<UpdateFavoritesPacket>()
             .RegisterMessageType<QuickStoreNearbyContainersPacket>()
+            .RegisterMessageType<RemeshContainersPacket>()
             .SetMessageHandler<SortInventoryPacket>(SortSystem.HandleSortInventory)
             .SetMessageHandler<UnloadInventoryPacket>(HandleUnloadInventory)
             .SetMessageHandler<UpdateFavoritesPacket>(HandleUpdateFavorites)
@@ -201,6 +224,8 @@ public class StorageTweaksModSystem : ModSystem
 
         PopulateToolAndFoodCodes(api);
         sapi.Logger.VerboseDebug("[StorageTweaks] Populated tool and food codes");
+
+        ContainerWhitelist.InitWhitelist(api);
 
         api.Event.PlayerJoin += OnPlayerJoin;
 
@@ -371,7 +396,10 @@ public class StorageTweaksModSystem : ModSystem
                 continue;
             }
 
-            if (destSlot.Itemstack == null) continue;
+            if (destSlot.Itemstack == null)
+            {
+                continue;
+            }
 
             // try catching here because one user got a null reference exception
             // no idea how because destSlot.Empty above should ensure that Itemstack is not null
@@ -395,21 +423,30 @@ public class StorageTweaksModSystem : ModSystem
 
         if (existingCodes.Count == 0)
         {
-            Logger().Debug("[StorageTweaks] UnloadInventory: no existing codes in dest ({0}), skipping", destInventory.InventoryID);
+            Logger().VerboseDebug("[StorageTweaks] UnloadInventory: no existing codes in dest ({0}), skipping", destInventory.InventoryID);
             return;
         }
 
-        Logger().Debug("[StorageTweaks] UnloadInventory: dest={0} class={1} slots={2} existingCodes=[{3}] stackPerishables={4}",
+        Logger().VerboseDebug("[StorageTweaks] UnloadInventory: dest={0} class={1} slots={2} existingCodes=[{3}] stackPerishables={4}",
             destInventory.InventoryID, destInventory.GetType().Name, destInventory.Count,
             string.Join(",", existingCodes), stackPerishables);
 
-        ProcessInventorySlots(playerInv, destInventory, existingCodes, fromPlayer, stackPerishables);
-        ProcessInventorySlots(playerHotbar, destInventory, existingCodes, fromPlayer, stackPerishables);
+        // Food Shelves containers cap items per *segment* (a run of ItemsPerSegment slots)
+        // based on item size - the vanilla GetBestSuitedSlot path we use ignores that cap,
+        // so we wrap the destination inventory in a segment guard that pre-blocks slots in
+        // already-full segments. The guard is disabled when Food Shelves isn't loaded.
+        var segmentGuard = FoodShelvesSegmentGuard.For(destInventory, fromPlayer.Entity.World);
+
+        ProcessInventorySlots(playerInv, destInventory, existingCodes, fromPlayer, stackPerishables,
+            segmentGuard);
+        ProcessInventorySlots(playerHotbar, destInventory, existingCodes, fromPlayer, stackPerishables,
+            segmentGuard);
     }
 
     [SuppressMessage("ReSharper", "SuggestBaseTypeForParameter")]
     private static void ProcessInventorySlots(IInventory sourceInventory, IInventory destInventory,
-        HashSet<string> existingCodes, IServerPlayer fromPlayer, bool stackPerishables)
+        HashSet<string> existingCodes, IServerPlayer fromPlayer, bool stackPerishables,
+        FoodShelvesSegmentGuard segmentGuard)
     {
         List<ItemSlot> ignoredSlots = [];
         foreach (var slot in sourceInventory)
@@ -430,6 +467,14 @@ public class StorageTweaksModSystem : ModSystem
             }
 
             ignoredSlots.Clear();
+            // Seed ignored slots with those whose segment is already at the per-segment cap
+            // for this source stack (Food Shelves itemsPerSegment layout). For non-Food Shelves
+            // inventories (or bulk slots) the guard returns nothing, so this is a no-op.
+            if (segmentGuard.Enabled)
+            {
+                ignoredSlots.AddRange(segmentGuard.FullSlotsFor(destInventory, slot.Itemstack!));
+            }
+
             var world = fromPlayer.Entity.World;
             // DirectMerge blends transition state so differently-perished food stacks;
             // AutoMerge (vanilla) refuses to merge stacks with mismatched perish progress.
@@ -446,6 +491,14 @@ public class StorageTweaksModSystem : ModSystem
                     {
                         if (fallbackIgnored.Contains(destSlot))
                         {
+                            continue;
+                        }
+
+                        // Honor the Food Shelves per-segment cap: a slot whose segment is at capacity
+                        // is treated as "cannot hold" so we don't overstuff that segment.
+                        if (segmentGuard.Enabled && segmentGuard.SegmentIsFull(destSlot, slot.Itemstack!))
+                        {
+                            fallbackIgnored.Add(destSlot);
                             continue;
                         }
 
@@ -493,6 +546,17 @@ public class StorageTweaksModSystem : ModSystem
                 }
 
                 slot.TryPutInto(suitedSlot.slot, ref op);
+                // After a successful TryPutInto a Food Shelves segment may now be at its cap
+                // for this stack. Block its remaining slots so the next GetBestSuitedSlot
+                // iteration skips them (mirrors Food Shelves' own TryPut exit condition).
+                if (segmentGuard.Enabled && !slot.Empty)
+                {
+                    if (segmentGuard.SegmentIsFull(suitedSlot.slot, slot.Itemstack!))
+                    {
+                        ignoredSlots.AddRange(BlockSegmentSiblings(destInventory, segmentGuard, slot.Itemstack));
+                    }
+                }
+
                 if (slot.Empty)
                 {
                     break;
@@ -515,6 +579,17 @@ public class StorageTweaksModSystem : ModSystem
         // which does NOT respect CanTake(), so we have to filter these out ourselves with `!slot.CanTake()`, otherwise
         // a non-takeable stack would be pulled out and have nowhere to land, since those slots also refuse CanHold().
         return !slot.Empty && !slot.CanTake();
+    }
+
+    /// <summary>
+    ///     Re-scans the destination inventory for Food Shelves segments that just reached
+    ///     their GetSegmentLimit cap as a result of a recent TryPutInto, and returns the remaining
+    ///     slots for each segment that should be skipped.
+    /// </summary>
+    private static HashSet<ItemSlot> BlockSegmentSiblings(IInventory destInventory,
+        FoodShelvesSegmentGuard segmentGuard, ItemStack sourceStack)
+    {
+        return !segmentGuard.Enabled ? [] : segmentGuard.FullSlotsFor(destInventory, sourceStack);
     }
 
     private static void LoadClientConfig(ICoreAPI api)
@@ -664,6 +739,80 @@ public class StorageTweaksModSystem : ModSystem
         {
             system.GetConfig("storagetweaks")?.AssignSettingsValues(config);
         };
+    }
+
+    /// <summary>
+    ///     Client-side handler for <see cref="RemeshContainersPacket" />. Tells Food Shelves
+    ///     display containers (and similar mods) to rebuild their baked-in content mesh after
+    ///     a server-side inventory mutation (e.g. quick store nearby). Such containers cache
+    ///     their content mesh in <c>blockMesh</c> via their own <c>InitMesh()</c>, which the
+    ///     regular <c>BlockEntityDisplay.MarkMeshesDirty()</c> (triggered by <c>MarkDirty(true)</c>)
+    ///     does not refresh. Deferred by one tick so the concurrent BE tree-attribute sync
+    ///     (also queued by <c>MarkDirty(true)</c>) has landed and the client-side inventory
+    ///     <c>InitMesh</c> reads from is current.
+    /// </summary>
+    private void HandleRemeshContainersPacket(RemeshContainersPacket packet)
+    {
+        if (capi == null || packet.Positions.Count == 0)
+        {
+            return;
+        }
+
+        capi.Event.RegisterCallback(_ =>
+        {
+            foreach (var pos in packet.Positions)
+            {
+                var be = capi.World.BlockAccessor.GetBlockEntity(pos);
+                if (be == null)
+                {
+                    continue;
+                }
+
+                var initMesh = FindInitMesh(be.GetType());
+                if (initMesh == null)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    initMesh.Invoke(be, null);
+                }
+                catch (Exception e)
+                {
+                    capi.Logger.Warning("[StorageTweaks] InitMesh invoke failed on {0} at {1}: {2}",
+                        be.GetType().Name, pos, e);
+                    continue;
+                }
+
+                // Re-tessellate the chunk so OnTesselation picks up the refreshed blockMesh.
+                capi.World.BlockAccessor.MarkBlockDirty(pos);
+            }
+        }, 100);
+    }
+
+    /// <summary>
+    ///     Walks the type hierarchy looking for a parameterless <c>InitMesh()</c> instance method
+    ///     (the Food Shelves pattern; declared as protected). <see cref="BindingFlags.NonPublic" />
+    ///     does not return inherited members, so we walk up the chain ourselves. Returns null
+    ///     when the BE type has no InitMesh (vanilla chests, baskets, etc.) so those are skipped.
+    /// </summary>
+    private static MethodInfo? FindInitMesh(Type? type)
+    {
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public |
+                                   BindingFlags.DeclaredOnly;
+        while (type != null && type != typeof(object))
+        {
+            var method = type.GetMethod("InitMesh", flags);
+            if (method != null && method.GetParameters().Length == 0)
+            {
+                return method;
+            }
+
+            type = type.BaseType;
+        }
+
+        return null;
     }
 
     public override void Dispose()
