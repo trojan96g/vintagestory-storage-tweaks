@@ -27,9 +27,6 @@ public class FavoritedSlot
     private readonly float marginLeft;
     private readonly float marginTop;
 
-    /// <summary>
-    ///     Slot with item(s) in the favorite list
-    /// </summary>
     public FavoritedSlot(ElementBounds bounds, ICoreClientAPI api)
     {
         capi = api;
