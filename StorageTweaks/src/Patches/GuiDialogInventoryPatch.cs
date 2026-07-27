@@ -12,7 +12,7 @@ using Vintagestory.Client.NoObf;
 namespace StorageTweaks.Patches;
 
 [HarmonyPatch]
-public class GuiDialogInventoryPatch
+public static class GuiDialogInventoryPatch
 {
     [HarmonyPatch(typeof(GuiComposerHelpers), "AddDialogTitleBar")]
     [HarmonyPostfix]
