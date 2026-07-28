@@ -244,12 +244,6 @@ public static class SortSystem
                     sourceSlot.TryPutInto(weightedSlot.slot, ref op);
                 }
             }
-
-
-            foreach (var slot in slots)
-            {
-                slot.MarkDirty();
-            }
         }
         catch (Exception e)
         {
