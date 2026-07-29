@@ -122,6 +122,7 @@ public static class ContainerWhitelist
         // Chonky Vessels
         "chonkyvessels:bundlegrainstoragevessel-*",
         "chonkyvessels:bundlestoragevessel-*",
+        "chonkyvessels:chonkystoragevessel-*",
         "chonkyvessels:storagevessel-*",
         "chonkyvessels:tallchonkystoragevessel-*",
         "chonkyvessels:tallstoragevessel-*",
