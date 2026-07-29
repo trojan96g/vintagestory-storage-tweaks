@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using StorageTweaks.Extensions;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Server;
@@ -15,13 +16,6 @@ public record SortSuccess : SortResult;
 
 public static class SortSystem
 {
-    // slot class names that can be sorted into but maybe not out of unless also in the StorageTweaksModSystem.SlotTypes
-    private static readonly HashSet<string> TargetWhitelist =
-    [
-        // tool-strap slot from https://mods.vintagestory.at/modularbackpacks
-        "ItemSlotToolBagContent",
-    ];
-
     public static void HandleSortInventory(IServerPlayer fromPlayer, SortInventoryPacket packet)
     {
         var inventory = fromPlayer.InventoryManager.GetInventory(packet.InventoryId);
@@ -72,107 +66,17 @@ public static class SortSystem
         var world = fromPlayer.Entity.World;
         // we should probably add checks if the player is allowed to access the inventory
 
-        var mergePriority = packet.StackPerishables ? EnumMergePriority.DirectMerge : EnumMergePriority.AutoMerge;
-
-        // if sorting player backpack also include none favorite slots from hotbar in sorting
-        var hotbarSlots = new List<ItemSlot>();
         var isPlayerBackpack = inventory.ClassName == GlobalConstants.backpackInvClassName;
         var hotbar = fromPlayer.InventoryManager.GetHotbarInventory();
-        if (isPlayerBackpack && packet.SortHotbarWithBackpack)
-        {
-            hotbarSlots =
-            [
-                .. hotbar.Where(s =>
-                {
-                    if (s.Empty)
-                    {
-                        return true;
-                    }
 
-                    // try catching here because one user got a null reference exception
-                    // no idea how because s.Empty above should ensure that Itemstack is not null.
-                    // The user that got the error actually had it happen in `UnloadInventory` but
-                    // if it can happen there I imagine it can happen here too.
-                    // https://mods.vintagestory.at/storagetweaks#cmt-193057
-                    try
-                    {
-                        return !FavoritesManager.IsFavorite(fromPlayer, s.Itemstack);
-                    }
-                    catch (Exception e)
-                    {
-                        world.Logger.Error("[StorageTweaks] IsFavorite threw exception with item stack: {0}, {1}", s.Itemstack, s.Itemstack?.Collectible);
-                        world.Logger.Error("[StorageTweaks] SortInventoryInternal: Exception {0}", e);
-                        return false;
-                    }
-                }),
-            ];
-        }
+        var mergePriority = packet.StackPerishables ? EnumMergePriority.DirectMerge : EnumMergePriority.AutoMerge;
 
-        var slots = inventory.ToList();
-        slots.AddRange(hotbarSlots);
-
-        // Excludes specialized bag slots from sorting,
-        // for example, Quivers And Sheaths item slots
-        // Examples: ItemSlotBagContentWithWildcardMatch, ItemSlotTakeOutOnly
-        slots = [.. slots.Where(slot =>
-        {
-            if (StorageTweaksModSystem.IsExcludedSlot(slot) || slot.Empty)
-            {
-                return false;
-            }
-
-            if (!packet.SkipFavoritesWhenSorting)
-            {
-                return true;
-            }
-
-            try
-            {
-                if (FavoritesManager.IsFavorite(fromPlayer, slot.Itemstack))
-                {
-                    return false;
-                }
-            }
-            catch (Exception e)
-            {
-                world.Logger.Error("[StorageTweaks] IsFavorite threw exception with item stack: {0}, {1}", slot.Itemstack, slot.Itemstack?.Collectible);
-                world.Logger.Error("[StorageTweaks] SortInventoryInternal: Exception {0}", e);
-            }
-
-            return true;
-        })];
+        var slots = inventory.GetSortableSlots(fromPlayer, packet.SortHotbarWithBackpack, packet.SkipFavoritesWhenSorting);
 
         try
         {
             // Compact stacks
-            for (var i = 0; i < slots.Count; i++)
-            {
-                var sourceSlot = slots[i];
-
-                var stack = sourceSlot.Itemstack;
-
-                // Try to merge this stack into every other suitable slot
-                for (var j = 0; j < slots.Count; j++)
-                {
-                    if (i == j)
-                    {
-                        continue; // Don't merge into itself
-                    }
-
-                    var targetSlot = slots[j];
-                    if (targetSlot.Empty)
-                    {
-                        continue;
-                    }
-
-                    var op = new ItemStackMoveOperation(world, EnumMouseButton.Left, 0, mergePriority, stack.StackSize);
-                    sourceSlot.TryPutInto(targetSlot, ref op);
-                    if (sourceSlot.Empty)
-                    {
-                        break;
-                    }
-                }
-            }
+            CompactStacks(slots, world, mergePriority);
 
             // take out all stacks
             var itemStacks = slots.Where(s => !s.Empty).Select(x => x.TakeOutWhole()).ToList();
@@ -234,7 +138,7 @@ public static class SortSystem
                     }
 
                     skippedSlots.Add(weightedSlot.slot);
-                    if (StorageTweaksModSystem.IsExcludedSlot(weightedSlot.slot) && !CanSortInto(weightedSlot.slot))
+                    if (!weightedSlot.slot.CanSortInto())
                     {
                         world.Logger.Warning("Got best suited slot that is excluded: {0}",
                             weightedSlot.slot.GetType().Name);
@@ -243,6 +147,14 @@ public static class SortSystem
 
                     sourceSlot.TryPutInto(weightedSlot.slot, ref op);
                 }
+            }
+
+            // do a final compact on quivers and sheaths slots. These are excluded from sorting, but
+            // we still want to compact them without moving them out of quivers and sheaths
+            if (isPlayerBackpack)
+            {
+                var quiversAndSheaths = inventory.NonEmptyQuiversAndSheathsSlots();
+                CompactStacks(quiversAndSheaths, world, mergePriority);
             }
         }
         catch (Exception e)
@@ -253,9 +165,30 @@ public static class SortSystem
         return new SortSuccess();
     }
 
-    // returns true if the slot can be used to place items into after sorting
-    private static bool CanSortInto(ItemSlot slot)
+    private static void CompactStacks(IReadOnlyList<ItemSlot> slots, IWorldAccessor world, EnumMergePriority mergePriority)
     {
-        return TargetWhitelist.Contains(slot.GetType().Name);
+        for (var i = slots.Count - 1; i != 0; i--)
+        {
+            var sourceSlot = slots[i];
+
+            var stack = sourceSlot.Itemstack;
+
+            // Try to merge this stack into every other slot before this one
+            for (var j = 0; j < i; j++)
+            {
+                var targetSlot = slots[j];
+                if (targetSlot.Empty)
+                {
+                    continue;
+                }
+
+                var op = new ItemStackMoveOperation(world, EnumMouseButton.Left, 0, mergePriority, stack.StackSize);
+                sourceSlot.TryPutInto(targetSlot, ref op);
+                if (sourceSlot.Empty)
+                {
+                    break;
+                }
+            }
+        }
     }
 }

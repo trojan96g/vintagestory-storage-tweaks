@@ -2,9 +2,8 @@
 // ReSharper disable UnusedType.Global
 // ReSharper disable ClassNeverInstantiated.Global
 
-using System.Collections.Generic;
-using System.Linq;
 using HarmonyLib;
+using StorageTweaks.Extensions;
 using Vintagestory.API.Common;
 
 namespace StorageTweaks.Patches;
@@ -32,24 +31,7 @@ public class InventoryBasePatch
             return;
         }
 
-        if (slotType.Name != "ItemSlotBagContentWithWildcardMatch")
-        {
-            return;
-        }
-
-        var configProp = slotType.GetProperty("Config");
-        if (configProp?.GetValue(targetSlot) is not { } config)
-        {
-            return;
-        }
-
-        var canHoldWildcardsProp = config.GetType().GetProperty("CanHoldWildcards");
-        if (canHoldWildcardsProp?.GetValue(config) is not IEnumerable<string> wildcards)
-        {
-            return;
-        }
-
-        if (!wildcards.Contains("*"))
+        if (targetSlot.IsRestrictedWildcardSlot())
         {
             __result += 1.0f;
         }
