@@ -167,6 +167,10 @@ public static class SortSystem
 
     private static void CompactStacks(IReadOnlyList<ItemSlot> slots, IWorldAccessor world, EnumMergePriority mergePriority)
     {
+        if (slots.Count == 0)
+        {
+            return;
+        }
         for (var i = slots.Count - 1; i != 0; i--)
         {
             var sourceSlot = slots[i];
