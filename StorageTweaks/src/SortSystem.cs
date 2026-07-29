@@ -148,6 +148,14 @@ public static class SortSystem
                     sourceSlot.TryPutInto(weightedSlot.slot, ref op);
                 }
             }
+
+            // do a final compact on quivers and sheaths slots. These are excluded from sorting, but
+            // we still want to compact them without moving them out of quivers and sheaths
+            if (isPlayerBackpack)
+            {
+                var quiversAndSheaths = inventory.NonEmptyQuiversAndSheathsSlots();
+                CompactStacks(quiversAndSheaths, world, mergePriority);
+            }
         }
         catch (Exception e)
         {
@@ -157,22 +165,17 @@ public static class SortSystem
         return new SortSuccess();
     }
 
-    private static void CompactStacks(List<ItemSlot> slots, IWorldAccessor world, EnumMergePriority mergePriority)
+    private static void CompactStacks(IReadOnlyList<ItemSlot> slots, IWorldAccessor world, EnumMergePriority mergePriority)
     {
-        for (var i = 0; i < slots.Count; i++)
+        for (var i = slots.Count - 1; i != 0; i--)
         {
             var sourceSlot = slots[i];
 
             var stack = sourceSlot.Itemstack;
 
-            // Try to merge this stack into every other suitable slot
-            for (var j = 0; j < slots.Count; j++)
+            // Try to merge this stack into every other slot before this one
+            for (var j = 0; j < i; j++)
             {
-                if (i == j)
-                {
-                    continue; // Don't merge into itself
-                }
-
                 var targetSlot = slots[j];
                 if (targetSlot.Empty)
                 {

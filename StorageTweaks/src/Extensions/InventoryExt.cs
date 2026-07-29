@@ -81,4 +81,9 @@ public static class InventoryExt
             }),
         ];
     }
+
+    public static ItemSlot[] NonEmptyQuiversAndSheathsSlots(this IInventory inventory)
+    {
+        return [.. inventory.ToList().Where(slot => !slot.Empty && slot.IsQuiversAndSheathsSlot())];
+    }
 }
