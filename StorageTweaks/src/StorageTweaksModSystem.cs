@@ -6,6 +6,7 @@ using System.Reflection;
 using ConfigLib;
 using HarmonyLib;
 using ProtoBuf;
+using StorageTweaks.Extensions;
 using StorageTweaks.Gui;
 using StorageTweaks.Patches;
 using Vintagestory.API.Client;
@@ -115,21 +116,6 @@ public class StorageTweaksServerConfig
 // ReSharper disable once ClassNeverInstantiated.Global
 public class StorageTweaksModSystem : ModSystem
 {
-    private static readonly string[] SlotTypes =
-    [
-        "ItemSlotSurvival",
-        "ItemSlotBagContent",
-        // for overhaullib before 1.22, Quivers And Sheaths and Backpacks mod use this slot type before 1.22
-        "ItemSlotBagContentWithWildcardMatch",
-        // for https://mods.vintagestory.at/playerinventorylib used by backpacks mod in 1.22+
-        "BackpackSlot",
-        // for https://mods.vintagestory.at/playerinventorylib without the Backpacks mod
-        "VanillaBagContentSlot",
-        // for https://mods.vintagestory.at/moreinventorys crates/baskets use these slots
-        "ItemSlotDynamic",
-        "StandardSlot",
-    ];
-
     private static StorageTweaksClientConfig config = new();
     private static StorageTweaksServerConfig serverConfig = new();
 
@@ -461,7 +447,7 @@ public class StorageTweaksModSystem : ModSystem
                 continue;
             }
 
-            if (IsExcludedSlot(slot))
+            if (!slot.CanSortInto())
             {
                 continue;
             }
@@ -565,20 +551,6 @@ public class StorageTweaksModSystem : ModSystem
                 ignoredSlots.Add(suitedSlot.slot);
             }
         }
-    }
-
-    public static bool IsExcludedSlot(ItemSlot slot)
-    {
-        if (!SlotTypes.Contains(slot.GetType().Name))
-        {
-            return true;
-        }
-
-        // Exclude slots that refuse to give up their contents (e.g. upgrade/container slots,
-        // take-locked slots, output-only slots in other mods). The sort path uses ItemSlot.TakeOutWhole()
-        // which does NOT respect CanTake(), so we have to filter these out ourselves with `!slot.CanTake()`, otherwise
-        // a non-takeable stack would be pulled out and have nowhere to land, since those slots also refuse CanHold().
-        return !slot.Empty && !slot.CanTake();
     }
 
     /// <summary>
