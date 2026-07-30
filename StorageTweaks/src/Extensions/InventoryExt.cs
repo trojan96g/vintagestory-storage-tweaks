@@ -54,7 +54,7 @@ public static class InventoryExt
         [
             .. slots.Where(slot =>
             {
-                if (!slot.CanSortMoveOut() || slot.Empty)
+                if (!slot.CanSort() || slot.Empty)
                 {
                     return false;
                 }

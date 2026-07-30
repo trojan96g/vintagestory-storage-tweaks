@@ -62,7 +62,7 @@ public static class ItemSlotExt
     }
 
     // slots that sort is allowed to move items out of
-    public static bool CanSortMoveOut(this ItemSlot slot)
+    public static bool CanSort(this ItemSlot slot)
     {
         // ReSharper disable once ConvertIfStatementToReturnStatement
         if (slot.IsRestrictedWildcardSlot())
@@ -70,9 +70,8 @@ public static class ItemSlotExt
             return false;
         }
 
-        return SlotTypes.Contains(slot.GetType().Name);
+        return SlotTypes.Contains(slot.GetType().Name) && (slot.CanTake() || slot.Empty);
     }
-
 
     // returns true if the slot can be used to place items into after sorting
     public static bool CanSortInto(this ItemSlot slot)
@@ -83,7 +82,7 @@ public static class ItemSlotExt
             return true;
         }
 
-        return slot.CanSortMoveOut() || TargetWhitelist.Contains(slot.GetType().Name);
+        return slot.CanSort() || TargetWhitelist.Contains(slot.GetType().Name);
     }
 
     // ReSharper disable once MemberCanBePrivate.Global
