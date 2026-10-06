@@ -126,6 +126,25 @@ public static class ContainerWhitelist
         "chonkyvessels:storagevessel-*",
         "chonkyvessels:tallchonkystoragevessel-*",
         "chonkyvessels:tallstoragevessel-*",
+        
+        // Purposeful Storage
+        "purposefulstorage:belthooks-*",
+        "purposefulstorage:blanketrack-*",
+        "purposefulstorage:gloverack-*",
+        "purposefulstorage:hatrack-*",
+        "purposefulstorage:necklacestand-*",
+        "purposefulstorage:pantsrack-*",
+        "purposefulstorage:shoerack-*",
+        "purposefulstorage:wardrobe-*",
+        "purposefulstorage:gearrack-*",
+        "purposefulstorage:tuningcylinderrack-*",
+        "purposefulstorage:clothrack-*",
+        "purposefulstorage:resourcebin-*",
+        "purposefulstorage:roperack-*",
+        "purposefulstorage:spearrack-*",
+        "purposefulstorage:swordpedestal-*",
+        "purposefulstorage:swordplaque-*",
+        "purposefulstorage:weaponrack-*"
     ];
 
     private static readonly HashSet<AssetLocation> Whitelist = [];
