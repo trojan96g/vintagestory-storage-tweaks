@@ -144,7 +144,35 @@ public static class ContainerWhitelist
         "purposefulstorage:spearrack-*",
         "purposefulstorage:swordpedestal-*",
         "purposefulstorage:swordplaque-*",
-        "purposefulstorage:weaponrack-*"
+        "purposefulstorage:weaponrack-*",
+
+        // QP's Chisel Tools
+        "chiseltools:chiseledchestnerfed-*",
+        "chiseltools:chiseledflowerpot-deco",
+        "chiseltools:decobookshelf",
+        "chiseltools:chiseledchest-*",
+        "chiseltools:chiseledbarrel",
+        "chiseltools:chiseleddisplaycase",
+        // "chiseltools:chiseledfirepit-cold",
+        "chiseltools:chiseledshelf-normal-*",
+        // "chiseltools:chiseledforge",
+        "chiseltools:chiseledstoragevessel-*",
+        "chiseltools:chiseledplanter-deco",
+        // "chiseltools:chiseledoven-east",
+
+        // Mastodon Trunk fix
+        "mastodontrunk:mastodontrunksimple-*",
+        "mastodontrunk:mastodontrunkaged-*",
+        "mastodontrunk:mastodontrunk-*",
+
+        // Eternal Seraph: Chests
+        "eternalschests:eternalscrate",
+        "eternalschests:eternalcabinet-*",
+        "eternalschests:eternalschest-*",
+        "eternalschests:eternalsmallcabinet-*",
+        "eternalschests:eternalstrunk-*",
+        // "eternalschests:eternalsafe",
+        // "eternalschests:eternalsharedchest-*",
     ];
 
     private static readonly HashSet<AssetLocation> Whitelist = [];
