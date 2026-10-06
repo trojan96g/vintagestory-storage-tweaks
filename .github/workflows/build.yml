@@ -10,7 +10,7 @@ on:
     branches: [ "master" ]
 
 env:
-  CONFIGLIB_DOWNLOAD_URL: "https://mods.vintagestory.at/download/73792/configlib_1.10.14.zip"
+  CONFIGLIB_DOWNLOAD_URL: "https://mods.vintagestory.at/download/60855/configlib_1.10.7.zip"
 
 jobs:
   build:
