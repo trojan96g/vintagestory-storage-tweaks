@@ -123,18 +123,18 @@ public class GuiElementItemSlotGridPatch
             }
 
             var value = renderedSlot.Value;
-            if (!(Util.IsPlayerBackpack(value.Inventory) || Util.IsPlayerHotbar(value.Inventory)))
+            var elementBounds = __instance.SlotBounds[slotIndex++];
+            // Some mod slots (e.g. vinconomy's shop stalls) have no inventory.
+            var inventory = value?.Inventory;
+            if (inventory == null || !(Util.IsPlayerBackpack(inventory) || Util.IsPlayerHotbar(inventory)))
             {
                 continue;
             }
 
-            if (value.Itemstack != null && favoritesManager.IsFavorite(value.Itemstack))
+            if (value?.Itemstack != null && favoritesManager.IsFavorite(value.Itemstack))
             {
-                var elementBounds = __instance.SlotBounds[slotIndex];
                 new FavoritedSlot(elementBounds, capi).Draw();
             }
-
-            slotIndex++;
         }
     }
 
